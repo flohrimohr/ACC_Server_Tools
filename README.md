@@ -50,6 +50,8 @@ Create and maintain a list of drivers.
 
 Drivers created here can later be assigned to cars in the **Entry List Manager**.
 
+![Driver Manager Screenshot](images/driver_manager.png)
+
 ---
 
 ### Entry List Manager
@@ -61,6 +63,8 @@ Create or edit the server entry list.
 - Configure individual car handicaps
 - Define team entries
 
+![Entry List Manager Screenshot](images/enty_list_manager.png)
+
 ---
 
 ### BOP Manager (Balance of Performance)
@@ -70,6 +74,8 @@ Create or edit custom Balance of Performance (BoP) configurations.
 - Configure per-car adjustments
 - Assign BoP to specific tracks
 - Export ready-to-use JSON
+
+![BOP Manager](images/bop_manager.png)
 
 ---
 
@@ -82,6 +88,8 @@ Create and configure race events.
 - Adjust weather settings
 - Define session timing
 
+![Event Manager](images/event_manager.png)
+
 ---
 
 ### Rules Manager
@@ -92,6 +100,8 @@ Configure server rule settings such as:
 - Driver stint settings
 - Pit stop regulations
 - Penalty rules
+
+![Rules Manager](images/rules_manager.png)
 
 ---
 
@@ -104,6 +114,8 @@ Configure global server parameters:
 - Driver requirements
 - Formation lap settings
 - General server behavior
+
+![Server Settings](images/server_settings.png)
 
 ---
 
