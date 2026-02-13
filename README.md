@@ -16,7 +16,7 @@ No backend, no installation, no dependencies — runs entirely in your browser.
 No installation required.
 
 1. Download the template file:  
-   👉 [acc_server_tool.html](https://github.com/flohrimohr/ACC_Server_Tools/blob/main/acc_server_tool.html)
+   👉 [acc_server_tool.html](https://github.com/flohrimohr/ACC_Server_Tools/blob/main/src/acc_server_tool.html)
 
 2. Open the file in your browser (recommended: Chrome or Firefox).
 
