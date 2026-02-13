@@ -21,7 +21,7 @@ jobs:
           cp src/acc_server_tool.html dist/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: static-content
           path: dist/
