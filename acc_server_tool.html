@@ -1,0 +1,2601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiP ACC Server Tool</title>
+    <!--
+        Author: Jonas Flohr
+        GitHub: flohrimohr
+    -->
+    <script>
+        const groups = {
+            GT2: "GT2",
+            GT3: "GT3",
+            GT4: "GT4",
+            CS: "CS",
+            CUP: "CUP",
+        }
+
+        const serverCarGroups = {
+            GTC: "GTC",
+            GT2: "GT2",
+            GT3: "GT3",
+            GT4: "GT4",
+            TCX: "TCX",
+            FreeForAll: "Free for All",
+        }
+
+        const formationLapTypes = {
+            0: "Free",
+            1: "Old limiter lap",
+            3: "Default ACC",
+            4: "One Lap Formation",
+            5: "Short Formation Lap",
+        }
+
+        const sessionTypes = {
+            Practice: "P",
+            Qualifying: "Q",
+            Race: "R"
+        }
+
+        const qualyTypes = {
+            fastest_lap: "Fastest Lap",
+            average_lap: "Average Lap (For Endurance with multiple Qualy sessions)",
+        }
+
+        const qualyTypesValues = {
+            fastest_lap: 1,
+            average_lap: 2,
+        }
+
+        // tracks
+        let tracks = [
+            { name: "Monza", id: "monza", pitBoxes: 29, slots: 60 },
+            { name: "Zolder", id: "zolder", pitBoxes: 34, slots: 50 },
+            { name: "Brands Hatch", id: "brands_hatch", pitBoxes: 32, slots: 50 },
+            { name: "Silverstone", id: "silverstone", pitBoxes: 36, slots: 60 },
+            { name: "Paul Ricard", id: "paul_ricard", pitBoxes: 33, slots: 80 },
+            { name: "Misano", id: "misano", pitBoxes: 30, slots: 50 },
+            { name: "Spa", id: "spa", pitBoxes: 82, slots: 82 },
+            { name: "Nurburgring", id: "nurburgring", pitBoxes: 30, slots: 50 },
+            { name: "Barcelona", id: "barcelona", pitBoxes: 29, slots: 50 },
+            { name: "Hungaroring", id: "hungaroring", pitBoxes: 27, slots: 50 },
+            { name: "Zandvoort", id: "zandvoort", pitBoxes: 25, slots: 50 },
+            { name: "Kyalami", id: "kyalami", pitBoxes: 40, slots: 50 },
+            { name: "Mount Panorama", id: "mount_panorama", pitBoxes: 36, slots: 50 },
+            { name: "Suzuka", id: "suzuka", pitBoxes: 51, slots: 105 },
+            { name: "Laguna Seca", id: "laguna_seca", pitBoxes: 30, slots: 50 },
+            { name: "Imola", id: "imola", pitBoxes: 30, slots: 50 },
+            { name: "Oulton Park", id: "oulton_park", pitBoxes: 28, slots: 50 },
+            { name: "Donington", id: "donington", pitBoxes: 37, slots: 50 },
+            { name: "Snetterton", id: "snetterton", pitBoxes: 26, slots: 50 },
+            { name: "COTA", id: "cota", pitBoxes: 30, slots: 70 },
+            { name: "Indianapolis", id: "indianapolis", pitBoxes: 30, slots: 60 },
+            { name: "Watkins Glen", id: "watkins_glen", pitBoxes: 30, slots: 60 },
+            { name: "Valencia", id: "valencia", pitBoxes: 29, slots: 50 },
+            { name: "Nurburgring 24h", id: "nurburgring_24h", pitBoxes: 50, slots: 110 },
+            { name: "Red Bull Ring", id: "red_bull_ring", pitBoxes: 50, slots: 110 }
+        ];
+
+        // cars
+        let carList = [
+            { id: 0, group: groups.GT3, name: "Porsche 991 GT3 R" },
+            { id: 1, group: groups.GT3, name: "Mercedes-AMG GT3" },
+            { id: 2, group: groups.GT3, name: "Ferrari 488 GT3" },
+            { id: 3, group: groups.GT3, name: "Audi R8 LMS" },
+            { id: 4, group: groups.GT3, name: "Lamborghini Huracan GT3" },
+            { id: 5, group: groups.GT3, name: "McLaren 650S GT3" },
+            { id: 6, group: groups.GT3, name: "Nissan GT-R Nismo GT3 2018" },
+            { id: 7, group: groups.GT3, name: "BMW M6 GT3" },
+            { id: 8, group: groups.GT3, name: "Bentley Continental GT3 2018" },
+            { id: 9, group: groups.CUP, name: "Porsche 991II GT3 Cup" },
+            { id: 10, group: groups.GT3, name: "Nissan GT-R Nismo GT3 2017" },
+            { id: 11, group: groups.GT3, name: "Bentley Continental GT3 2016" },
+            { id: 12, group: groups.GT3, name: "Aston Martin V12 Vantage GT3" },
+            { id: 13, group: groups.GT3, name: "Lamborghini Gallardo R-EX" },
+            { id: 14, group: groups.GT3, name: "Jaguar G3" },
+            { id: 15, group: groups.GT3, name: "Lexus RC F GT3" },
+            { id: 16, group: groups.GT3, name: "Lamborghini Huracan Evo (2019)" },
+            { id: 17, group: groups.GT3, name: "Honda NSX GT3" },
+            { id: 18, group: groups.CUP, name: "Lamborghini Huracan SuperTrofeo" },
+            { id: 19, group: groups.GT3, name: "Audi R8 LMS Evo (2019)" },
+            { id: 20, group: groups.GT3, name: "AMR V8 Vantage (2019)" },
+            { id: 21, group: groups.GT3, name: "Honda NSX Evo (2019)" },
+            { id: 22, group: groups.GT3, name: "McLaren 720S GT3 (2019)" },
+            { id: 23, group: groups.GT3, name: "Porsche 911II GT3 R (2019)" },
+            { id: 24, group: groups.GT3, name: "Ferrari 488 GT3 Evo 2020" },
+            { id: 25, group: groups.GT3, name: "Mercedes-AMG GT3 2020" },
+            { id: 26, group: groups.CUP, name: "Ferrari 488 Challenge Evo" },
+            { id: 27, group: groups.CS, name: "BMW M2 CS Racing" },
+            { id: 28, group: groups.CUP, name: "Porsche 911 GT3 Cup (Type 992)" },
+            { id: 29, group: groups.CUP, name: "Lamborghini Huracán Super Trofeo EVO2" },
+            { id: 30, group: groups.GT3, name: "BMW M4 GT3" },
+            { id: 31, group: groups.GT3, name: "Audi R8 LMS GT3 evo II" },
+            { id: 32, group: groups.GT3, name: "Ferrari 296 GT3" },
+            { id: 33, group: groups.GT3, name: "Lamborghini Huracan Evo2" },
+            { id: 34, group: groups.GT3, name: "Porsche 992 GT3 R" },
+            { id: 35, group: groups.GT3, name: "McLaren 720S GT3 Evo 2023" },
+            { id: 36, group: groups.GT3, name: "Ford Mustang GT3" },
+            { id: 50, group: groups.GT4, name: "Alpine A110 GT4" },
+            { id: 51, group: groups.GT4, name: "AMR V8 Vantage GT4" },
+            { id: 52, group: groups.GT4, name: "Audi R8 LMS GT4" },
+            { id: 53, group: groups.GT4, name: "BMW M4 GT4" },
+            { id: 55, group: groups.GT4, name: "Chevrolet Camaro GT4" },
+            { id: 56, group: groups.GT4, name: "Ginetta G55 GT4" },
+            { id: 57, group: groups.GT4, name: "KTM X-Bow GT4" },
+            { id: 58, group: groups.GT4, name: "Maserati MC GT4" },
+            { id: 59, group: groups.GT4, name: "McLaren 570S GT4" },
+            { id: 60, group: groups.GT4, name: "Mercedes-AMG GT4" },
+            { id: 61, group: groups.GT4, name: "Porsche 718 Cayman GT4" },
+            { id: 80, group: groups.GT2, name: "Audi R8 LMS GT2" },
+            { id: 82, group: groups.GT2, name: "KTM XBOW GT2" },
+            { id: 83, group: groups.GT2, name: "Maserati MC20 GT2" },
+            { id: 84, group: groups.GT2, name: "Mercedes AMG GT2" },
+            { id: 85, group: groups.GT2, name: "Porsche 911 GT2 RS CS Evo" },
+            { id: 86, group: groups.CUP, name: "Porsche 935" },
+        ];
+
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            display: flex;
+            background: #333;
+            color: #fff;
+            overflow-y: auto;
+        }
+
+        .navbar button {
+            background: none;
+            border: none;
+            color: #fff;
+            padding: 16px 24px;
+            cursor: pointer;
+            font-size: 16px;
+            white-space: nowrap;
+            border-radius: unset;
+        }
+
+        .navbar button.activeView {
+            background: #444;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.activeView {
+            display: block;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            background: #f5f5f5;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        p {
+            display: block;
+            margin-block: 1em;
+            margin-inline: 1em;
+            unicode-bidi: isolate;
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+        }
+
+        header .navbar {
+            width: 100%;
+        }
+
+        header .titleBar {
+            width: calc(100% - 48px);
+            padding: 24px;
+            padding-bottom: 0;
+            color: #222;
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .card {
+            background: #fff;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+            border-radius: 12px;
+            margin: 20px 16px;
+            padding: 20px;
+            max-width: calc(100% - 72px);
+            max-height: calc(100% - 64px);
+            display: flex;
+            gap: 32px;
+        }
+
+        .card-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        td {
+            height: 36px;
+        }
+
+        th {
+            font-weight: 600;
+        }
+
+        thead {
+            border-bottom: 2px solid darkgray;
+        }
+
+        tbody {
+            tr:nth-child(even) {
+                background-color: #f7f7f7;
+            }
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .formElement {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .formElement.fullWidth {
+            position: relative;
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        input,
+        select,
+        textarea,
+        button {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            height: 18px !important;
+            width: 18px !important;
+            margin: 12px;
+            accent-color: #222;
+            align-self: center;
+        }
+
+        textarea {
+            width: 100%;
+            height: calc(100% - 16px);
+            min-height: 25vh;
+            resize: vertical;
+            overflow: auto;
+            cursor: pointer;
+            font-family: monospace;
+        }
+
+        .pointer,
+        .delete,
+        option {
+            cursor: pointer;
+        }
+
+        button {
+            background: #222;
+            color: #fff;
+            border: none;
+            transition: background 0.2s;
+
+            svg {
+                fill: #fff;
+            }
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        .checkBoxArea {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .actions {
+            width: 20px;
+        }
+
+        .formTable {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 32px;
+        }
+
+        @media (min-width: 900px) {
+            .formTable {
+                flex-direction: row;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .formBlock {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        .snackbar {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #323232;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 16px;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            font-size: 17px;
+            transform: translateX(-50%);
+            z-index: 9999;
+            transition: visibility 0s, opacity 0.1s linear;
+            opacity: 0;
+        }
+
+        .formBlock {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            border: 1px solid lightgray;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .formBlock label {
+            margin-bottom: 0;
+            grid-column: 1 / -1;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .formElement label {
+            margin-bottom: 4px;
+            font-weight: normal;
+        }
+
+        .formElement hint {
+            color: gray;
+            font-size: small;
+        }
+
+        .backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+
+        .active {
+            background: #000000;
+            color: #fff;
+            border: none;
+        }
+
+        .typebtn,
+        .tableViewBtn,
+        .editorViewBtn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc !important;
+            background: #f3f3f3 !important;
+            color: #000 !important;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .typebtn.active,
+        .tableViewBtn.active,
+        .editorViewBtn.active {
+            background: #000000 !important;
+            color: #fff !important;
+            border: none !important;
+        }
+
+        .tool-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+        }
+
+        .tool-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 36px;
+            gap: 24px;
+            border-radius: 12px;
+            background: #f5f5f5;
+        }
+
+        .tool-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .tool-card-icon {
+            width: 80px;
+            height: 80px;
+        }
+
+        .tool-card-title {
+            text-align: center;
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        .tool-card-description {
+            font-size: 0.95em;
+            color: #666;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .inputAction {
+            display: flex;
+            width: 100%;
+        }
+
+        .inputAction input {
+            flex: 1;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .inputAction input:active,
+        .inputAction input:focus {
+            flex: 1;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .inputAction button {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .resetButton {
+            padding: 8px 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="navbar">
+            <div class="navbar" id="header-navbar">
+                <button id="nav-overview">LiP ACC Server Tool</button>
+            </div>
+            <button id="menu-btn" style="background: none; border: none; padding: 12px; cursor: pointer;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
+                    fill="#e3e3e3">
+                    <path
+                        d="M400-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM80-160v-112q0-33 17-62t47-44q51-26 115-44t141-18h14q6 0 12 2-8 18-13.5 37.5T404-360h-4q-71 0-127.5 18T180-306q-9 5-14.5 14t-5.5 20v32h252q6 21 16 41.5t22 38.5H80Zm560 40-12-60q-12-5-22.5-10.5T584-204l-58 18-40-68 46-40q-2-14-2-26t2-26l-46-40 40-68 58 18q11-8 21.5-13.5T628-460l12-60h80l12 60q12 5 22.5 11t21.5 15l58-20 40 70-46 40q2 12 2 25t-2 25l46 40-40 68-58-18q-11 8-21.5 13.5T732-180l-12 60h-80Zm40-120q33 0 56.5-23.5T760-320q0-33-23.5-56.5T680-400q-33 0-56.5 23.5T600-320q0 33 23.5 56.5T680-240ZM400-560q33 0 56.5-23.5T480-640q0-33-23.5-56.5T400-720q-33 0-56.5 23.5T320-640q0 33 23.5 56.5T400-560Zm0-80Zm12 400Z" />
+                </svg>
+            </button>
+            <div id="menu-popup"
+                style="display:none; position:fixed; min-width:220px; background:#fff; color:#333; border-radius:8px; box-shadow:0 2px 16px rgba(0,0,0,0.2); z-index:1000; padding:8px;">
+                <div class="formElement"
+                    style="flex-direction: row; align-items: center; margin: 8px 0; cursor: pointer;"
+                    onclick="toggleKeepChanges()">
+                    <input type="checkbox" id="keep-changes" style="margin-right:8px; pointer-events:none;"
+                        onchange="onKeepChangesChanged()">
+                    <script>
+                        function toggleKeepChanges() {
+                            const checkbox = $('#keep-changes');
+                            checkbox.checked = !checkbox.checked;
+                            keepChanges = checkbox.checked;
+                            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                        function onKeepChangesChanged() {
+                            writeLocalStorage(Storages.keepChanges, keepChanges);
+                            if (!keepChanges) {
+                                clearLocalStorage();
+                                showSnackbar('Cleared local storage.');
+                            }
+                            else {
+                                Object.keys(Storages).forEach(key => {
+                                    if (!forms[key]) return;
+                                    writeLocalStorage(key, forms[key]);
+                                });
+                                showSnackbar('Saved form data to local storage.');
+                            }
+                        }
+                        function handleKeepChanges() {
+                            $('#keep-changes').checked = keepChanges;
+                        }
+                    </script>
+                    <label for="keep-changes"
+                        style="display:block; margin-bottom:0; cursor: pointer; pointer-events:none;">Keep
+                        changes</label>
+                </div>
+            </div>
+        </div>
+        <div class="titleBar">
+            <div id="header-name">ACC Server Tool</div>
+        </div>
+    </header>
+
+    <template id="upload-download-buttons">
+        <div style="display: flex; gap: 32px;">
+            <button style="width: 100%; display: flex; align-items: center; gap: 8px; justify-content: center;"
+                type="button" class="uploadBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fff" viewBox="0 0 24 24">
+                    <path d="M12 16V4M12 4l-5 5M12 4l5 5" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <rect x="4" y="16" width="16" height="4" rx="2" fill="#fff" />
+                </svg>
+                Upload JSON
+            </button>
+            <button style="width: 100%; display: flex; align-items: center; gap: 8px; justify-content: center;"
+                type="button" class="downloadBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fff" viewBox="0 0 24 24">
+                    <path d="M12 8v12M12 20l-5-5M12 20l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <rect x="4" y="4" width="16" height="4" rx="2" fill="#fff" />
+                </svg>
+                Download JSON
+            </button>
+        </div>
+    </template>
+
+    <template id="tool-card-template">
+        <div class="tool-card" data-target="">
+            <div class="tool-card-icon"></div>
+            <div class="tool-card-title"></div>
+            <div class="tool-card-description"></div>
+        </div>
+    </template>
+
+    <div style="display: flex;width: 100%;">
+        <div style="flex: 1; display: inline-grid;">
+            <div class="card" style="display: flex; flex-direction: column; gap: 32px; width: 100%;">
+                <div id="view-overview" class="view activeView">
+                    <div class="tool-overview" id="tool-cards-container"></div>
+                </div>
+                <div id="view-driver" class="view">
+                    <div class="formTable">
+                        <div class="card-section">
+                            <div id="driver-uploadDownloadContainer"></div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="tableViewBtn active" id="driver-tableViewBtn">Table
+                                    View</button>
+                                <button type="button" class="editorViewBtn" id="driver-editorViewBtn">Text
+                                    Editor</button>
+                            </div>
+                            <div id="driver-tableEditorContainer">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>First Name</th>
+                                            <th>Last Name</th>
+                                            <th>Short Name</th>
+                                            <th>Driver Category</th>
+                                            <th>Player ID</th>
+                                            <th id="driver-actions" name="driver-actions" class="actions"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="driver-tableBody" name="driver-tableBody">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="driver-textEditorContainer" style="width: 100%; height: 100%; display: none;">
+                                <textarea id="driver-jsonTextEditor" name="driver-jsonTextEditor"
+                                    style="width: 100%; min-height: 200px; height: 300px; max-height: 50vh; resize: vertical; overflow: auto; cursor: pointer; font-family: monospace;"
+                                    readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <form>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button id="resetDriver" type="button" class="resetButton">
+                                        Reset
+                                    </button>
+                                </div>
+                                <div class="formBlock">
+                                    <label class="formLabel">Driver:</label>
+                                    <div class="formElement">
+                                        <label for="driverFirstName">First Name:</label>
+                                        <input type="text" id="driverFirstName" name="driverFirstName"
+                                            placeholder="First Name" required>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="driverLastName">Last Name:</label>
+                                        <input type="text" id="driverLastName" name="driverLastName"
+                                            placeholder="Last Name" required>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="driverShortName">Short Name:</label>
+                                        <input type="text" id="driverShortName" name="driverShortName"
+                                            placeholder="Short Name" maxlength="3" minlength="3" pattern=".{3,3}"
+                                            title="Short Name must be exactly 3 characters" required>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="driverCategory">Driver Category:</label>
+                                        <select id="driverCategory" name="driverCategory" required>
+                                            <option value="0">Bronze</option>
+                                            <option value="1">Silver</option>
+                                            <option value="2">Gold</option>
+                                            <option value="3">Platinum</option>
+                                        </select>
+                                    </div>
+                                    <div class="formElement fullWidth">
+                                        <label for="driverPlayerID">Player ID:</label>
+                                        <input type="text" id="driverPlayerID" name="driverPlayerID"
+                                            placeholder="Player ID" required>
+                                    </div>
+
+                                    <div class="formElement fullWidth">
+                                        <button type="button" id="addDriverBtn" class="addButton">
+                                            Add Driver
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div id="view-entryList" class="view">
+                    <div class="formTable">
+                        <div class="card-section">
+                            <div id="entry-uploadDownloadContainer"></div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="tableViewBtn active" id="entry-tableViewBtn">Table
+                                    View</button>
+                                <button type="button" class="editorViewBtn" id="entry-editorViewBtn">Text
+                                    Editor</button>
+                            </div>
+                            <div id="entry-tableEditorContainer">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Race Number</th>
+                                            <th>Car</th>
+                                            <th>Handicap Weight</th>
+                                            <th>Handicap Restrictor</th>
+                                            <th>Drivers</th>
+                                            <th class="actions"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="entry-tableBody">
+                                        <!-- Entry rows will be dynamically added here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="entry-textEditorContainer" style="width: 100%; height: 100%; display: none;">
+                                <textarea id="entry-jsonTextEditor" name="entry-jsonTextEditor"
+                                    style="width: 100%; resize: vertical; overflow: auto; cursor: pointer; font-family: monospace;"
+                                    readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <form>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button id="resetEntryList" type="button" class="resetButton">
+                                        Reset
+                                    </button>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Car:</label>
+
+                                    <div class="formElement fullWidth">
+                                        <div class="checkBoxArea" name="entry-groupCheckBoxes"></div>
+                                    </div>
+
+                                    <div class="formElement fullWidth">
+                                        <label for="entry-carSelect">Select Car:</label>
+                                        <select id="entry-carSelect" name="entry-car" required>
+                                            <option value="">-- Choose a car --</option>
+                                        </select>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="entry-raceNumber">Race Number:</label>
+                                        <input type="number" id="entry-raceNumber" name="entry-raceNumber" required>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="entry-overrideDriverInfo">Override Driver Info:</label>
+                                        <input type="checkbox" id="entry-overrideDriverInfo"
+                                            name="entry-overrideDriverInfo">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="entry-defaultGridPosition">Default Grid Position:</label>
+                                        <input type="number" id="entry-defaultGridPosition"
+                                            name="entry-defaultGridPosition" placeholder="-1">
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Handicap:</label>
+                                    <div class="formElement">
+                                        <label for="entry-handicapWeight">Handicap Weight (kg):</label>
+                                        <input type="number" id="entry-handicapWeight" name="entry-handicapWeight"
+                                            placeholder="0" min="0" max="40" step="1" required>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="entry-handicapRestrictor">Handicap Restrictor (%):</label>
+                                        <input type="number" id="entry-handicapRestrictor"
+                                            name="entry-handicapRestrictor" min="0" max="20" step="1" placeholder="0">
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Driver Assignment:</label>
+                                    <div class="formElement fullWidth">
+                                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                                            <div
+                                                style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; align-self: end;">
+                                                <button type="button" id="entry-addDriverBtn"
+                                                    style="display: flex; align-items: center; gap: 4px;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                        fill="#fff" viewBox="0 0 24 24">
+                                                        <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2"
+                                                            stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                    Add Driver
+                                                </button>
+                                            </div>
+                                            <table id="entry-driverTable" style="width: 100%;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>First Name</th>
+                                                        <th>Last Name</th>
+                                                        <th>Short Name</th>
+                                                        <th>Driver Category</th>
+                                                        <th>Player ID</th>
+                                                        <th class="actions"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="entry-driverTableBody">
+                                                    <!-- Driver rows will be dynamically added here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <hint>You can add new drivers in the Drivers tab.</hint>
+                                    </div>
+                                </div>
+                                <button id="addEntry" type="submit" style="position: relative; grid-column: 1 / -1">Add
+                                    Entry</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div id="view-bop" class="view">
+                    <div class="formTable">
+                        <div class="card-section">
+                            <div id="bop-uploadDownloadContainer"></div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="tableViewBtn active" id="bop-tableViewBtn">Table
+                                    View</button>
+                                <button type="button" class="editorViewBtn" id="bop-editorViewBtn">Text Editor</button>
+                            </div>
+                            <div id="bop-tableEditorContainer">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Car</th>
+                                            <th>Weight (kg)</th>
+                                            <th>Restrictor (%)</th>
+                                            <th id="bop-actions" name="bop-actions" class="actions"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bop-tableBody" name="bop-tableBody">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="bop-textEditorContainer" style="width: 100%; height: 100%; display: none;">
+                                <textarea id="bop-jsonTextEditor" name="bop-jsonTextEditor"
+                                    style="width: 100%; resize: vertical; overflow: auto; cursor: pointer; font-family: monospace;"
+                                    readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <form>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button id="resetBop" type="button" class="resetButton">
+                                        Reset
+                                    </button>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Global Event Details:</label>
+                                    <div class="formElement fullWidth">
+                                        <label for="bop-trackSelect">Select Track:</label>
+                                        <div style="position: relative;">
+                                            <select id="bop-trackSelect" name="bop-track" style="width: 100%;">
+                                                <option value="">-- Choose a track --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="formBlock">
+                                    <label>BOP:</label>
+
+                                    <div class="formElement fullWidth">
+                                        <div class="checkBoxArea" name="bop-groupCheckBoxes"></div>
+                                    </div>
+
+                                    <div class="formElement fullWidth">
+                                        <label for="bop-carSelect">Car:</label>
+                                        <select id="bop-carSelect" name="bop-car" required>
+                                            <option value="">-- Choose a car --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="formElement">
+                                        <label for="bop-weightInput">Weight (kg):</label>
+                                        <input type="number" id="bop-weightInput" name="bop-weight" placeholder="0"
+                                            min="-40" max="40" step="1" required>
+                                    </div>
+
+                                    <div class="formElement">
+                                        <label for="bop-restrictorInput">Restrictor (%):</label>
+                                        <input type="number" id="bop-restrictorInput" name="bop-restrictor" min="0"
+                                            max="20" step="1" placeholder="0">
+                                    </div>
+
+                                    <button id="addBop" type="submit"
+                                        style="position: relative; grid-column: 1 / -1">Add BOP</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div id="view-event" class="view">
+                    <div class="formTable">
+                        <div class="card-section">
+                            <div id="event-uploadDownloadContainer"></div>
+
+                            <div id="event-textEditorContainer" style="width: 100%; height: 100%; display: flex;">
+                                <textarea id="event-jsonTextEditor" name="event-jsonTextEditor"
+                                    style="width: 100%; height: calc(100% - 16px); min-height: 25vh; resize: vertical; overflow: auto; cursor: pointer; font-family: monospace;"
+                                    readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <form>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button id="resetEvent" type="button" class="resetButton">
+                                        Reset
+                                    </button>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Global Event Details:</label>
+                                    <div class="formElement">
+                                        <label for="event-trackSelect">Select Track:</label>
+                                        <select id="event-trackSelect" name="event-track">
+                                            <option value="">-- Choose a track --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="formElement">
+                                        <label for="event-configVersion">Configuration Version:</label>
+                                        <input type="number" id="event-configVersion" name="event-configVersion" min="1"
+                                            step="1" placeholder="1">
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Session Time Settings:</label>
+                                    <div class="formElement">
+                                        <label for="event-preRaceWaitingTimeSeconds">Pre-Race Waiting Time
+                                            (seconds):</label>
+                                        <input type="number" id="event-preRaceWaitingTimeSeconds"
+                                            name="event-preRaceWaitingTimeSeconds" min="0" step="1" placeholder="300">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="event-sessionOverTimeSeconds">Session Overtime
+                                            (seconds):</label>
+                                        <input type="number" id="event-sessionOverTimeSeconds"
+                                            name="event-sessionOverTimeSeconds" min="0" step="1" placeholder="180">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="event-postQualySeconds">Post-Qualy Time (seconds):</label>
+                                        <input type="number" id="event-postQualySeconds" name="event-postQualySeconds"
+                                            min="0" step="1" placeholder="60">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="event-postRaceSeconds">Post-Race Time (seconds):</label>
+                                        <input type="number" id="event-postRaceSeconds" name="event-postRaceSeconds"
+                                            min="0" step="1" placeholder="600">
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Weather Settings:</label>
+                                    <div class="formElement">
+                                        <label for="event-ambientTemp">Ambient Temperature (&deg;C):</label>
+                                        <input type="number" id="event-ambientTemp" name="event-ambientTemp" min="-50"
+                                            max="60" step="1" placeholder="17">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="event-trackTemp">Track Temperature (&deg;C):</label>
+                                        <input type="number" id="event-trackTemp" name="event-trackTemp" min="-50"
+                                            max="80" step="1" placeholder="30">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="event-cloudLevel">Cloud Level (0-1):</label>
+                                        <input type="number" id="event-cloudLevel" name="event-cloudLevel" min="0"
+                                            max="1" step="0.05" placeholder="0.5">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="event-rain">Rain (0-1):</label>
+                                        <input type="number" id="event-rain" name="event-rain" min="0" max="1"
+                                            step="0.05" placeholder="0">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="event-weatherRandomness">Weather Randomness (0-7):</label>
+                                        <input type="number" id="event-weatherRandomness" name="event-weatherRandomness"
+                                            min="0" max="7" step="1" placeholder="2">
+                                    </div>
+                                </div>
+
+                                <div class="formBlock">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; grid-column: 1 / -1; margin-bottom: 8px;">
+                                        <label>Sessions:</label>
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                            <button type="button" id="event-addSessionBtn"
+                                                style="display: flex; align-items: center; gap: 4px;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                    fill="#fff" viewBox="0 0 24 24">
+                                                    <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2"
+                                                        stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                                Add Session
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div style="grid-column: 1 / -1; overflow-y: auto;">
+                                        <table id="event-sessionsTable"
+                                            style="border-collapse: collapse; margin-bottom: 0;">
+                                            <thead>
+                                                <tr>
+                                                    <th
+                                                        style="border-bottom: 1px solid #ccc; padding: 8px; text-align: left; ">
+                                                        Type</th>
+                                                    <th
+                                                        style="border-bottom: 1px solid #ccc; padding: 8px; text-align: left; ">
+                                                        Hour of Day</th>
+                                                    <th
+                                                        style="border-bottom: 1px solid #ccc; padding: 8px; text-align: left; ">
+                                                        Day of Weekend</th>
+                                                    <th
+                                                        style="border-bottom: 1px solid #ccc; padding: 8px; text-align: left; ">
+                                                        Time Multiplier</th>
+                                                    <th
+                                                        style="border-bottom: 1px solid #ccc; padding: 8px; text-align: left; ">
+                                                        Duration (minutes)</th>
+                                                    <th style="border-bottom: 1px solid #ccc; padding: 8px; text-align: left;"
+                                                        class="actions"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="event-sessionsTableBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div id="view-rules" class="view">
+                    <div class="formTable">
+                        <div class="card-section">
+                            <div id="rules-uploadDownloadContainer"></div>
+
+                            <div id="rules-textEditorContainer" style="width: 100%; height: 100%; display: flex;">
+                                <textarea id="rules-jsonTextEditor" name="rules-jsonTextEditor"
+                                    style="width: 100%; height: calc(100% - 16px); min-height: 25vh; resize: vertical; overflow: auto; cursor: pointer; font-family: monospace;"
+                                    readonly></textarea>
+                            </div>
+                        </div>
+
+                        <div class="card-section">
+                            <form>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button id="resetEventRules" type="button" class="resetButton">
+                                        Reset
+                                    </button>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Qualifying:</label>
+                                    <div class="formElement fullWidth">
+                                        <label for="rules-qualifyingSelect">Select Qualifying Type:</label>
+                                        <select id="rules-qualifyingSelect" name="rules-qualifyingSelect"></select>
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Driver Settings:</label>
+                                    <div class="formElement">
+                                        <label for="rules-driverStintTime">Driver Stint Time (seconds):</label>
+                                        <input type="number" id="rules-driverStintTime" name="rules-driverStintTime"
+                                            min="-1" step="1" placeholder="-1">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-maxTotalDrivingTime">Max Total Driving Time (seconds):</label>
+                                        <input type="number" id="rules-maxTotalDrivingTime"
+                                            name="rules-maxTotalDrivingTime" min="-1" step="1" placeholder="-1">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-maxDriverCount">Max Driver Count:</label>
+                                        <input type="number" id="rules-maxDriverCount" name="rules-maxDriverCount"
+                                            min="-1" step="1" placeholder="1">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-driverSwapRequired" style="margin-bottom: 0;">Driver Swap
+                                            Required in Mandatory Pitstop</label>
+                                        <input type="checkbox" id="rules-driverSwapRequired"
+                                            name="rules-driverSwapRequired">
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Pit Settings:</label>
+                                    <div class="formElement">
+                                        <label for="rules-mandatoryPitStops">Mandatory Pit Stops:</label>
+                                        <input type="number" id="rules-mandatoryPitStops" name="rules-mandatoryPitStops"
+                                            min="-1" step="1" placeholder="-1">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-refuellingAllowed" style="margin-bottom: 0;">Refueling allowed
+                                            in Race</label>
+                                        <input type="checkbox" id="rules-refuellingAllowed"
+                                            name="rules-refuellingAllowed">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-pitWindowLength">Pitstop Window Length (Seconds):</label>
+                                        <input type="number" id="rules-pitWindowLength" name="rules-pitWindowLength"
+                                            min="-1" step="1" placeholder="-1">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-refuellingTimeFixed" style="margin-bottom: 0;">Refuelling time
+                                            Fixed</label>
+                                        <input type="checkbox" id="rules-refuellingTimeFixed"
+                                            name="rules-refuellingTimeFixed">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-tyresSetCount">Tyres Set Count:</label>
+                                        <input type="number" id="rules-tyresSetCount" name="rules-tyresSetCount" min="1"
+                                            max="50" step="1" placeholder="10">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-tyreChangeRequired" style="margin-bottom: 0;">Tyre Change
+                                            Required in Mandatory Stop</label>
+                                        <input type="checkbox" id="rules-tyreChangeRequired"
+                                            name="rules-tyreChangeRequired">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="rules-refuellingRequired" style="margin-bottom: 0;">Refueling
+                                            Required in Mandatory Stop</label>
+                                        <input type="checkbox" id="rules-refuellingRequired"
+                                            name="rules-refuellingRequired">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div id="view-settings" class="view">
+                    <div class="formTable">
+                        <div class="card-section">
+                            <div id="settings-uploadDownloadContainer"></div>
+
+                            <div id="settings-textEditorContainer" style="width: 100%; height: 100%; display: flex;">
+                                <textarea id="settings-jsonTextEditor" name="settings-jsonTextEditor"
+                                    style="width: 100%; height: calc(100% - 16px); min-height: 25vh; resize: vertical; overflow: auto; cursor: pointer; font-family: monospace;"
+                                    readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <form>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button id="resetSettings" type="button" class="resetButton">
+                                        Reset
+                                    </button>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Admin:</label>
+                                    <div class="formElement">
+                                        <label for="settings-serverName">Server Name:</label>
+                                        <input type="text" id="settings-serverName" name="settings-serverName"
+                                            placeholder="MyACCServer">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-adminPassword">Admin Password:</label>
+                                        <div class="inputAction">
+                                            <input type="text" id="settings-adminPassword" name="settings-adminPassword"
+                                                placeholder="Admin Password">
+                                            <button type="button"
+                                                onclick="generatePassword('settings-adminPassword')">Random</button>
+                                        </div>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-password">Driver Password:</label>
+                                        <div class="inputAction">
+                                            <input type="text" id="settings-password" name="settings-password"
+                                                placeholder="Driver Password">
+                                            <button type="button"
+                                                onclick="generatePassword('settings-password')">Random</button>
+                                        </div>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-spectatorPassword">Spectator Password:</label>
+                                        <div class="inputAction">
+                                            <input type="text" id="settings-spectatorPassword"
+                                                name="settings-spectatorPassword" placeholder="Spectator Password">
+                                            <button type="button"
+                                                onclick="generatePassword('settings-spectatorPassword')">Random</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Cars:</label>
+                                    <div class="formElement">
+                                        <label for="settings-maxCarSlots">Max Car Slots:</label>
+                                        <input type="number" id="settings-maxCarSlots" name="settings-maxCarSlots"
+                                            min="1" step="1" placeholder="20">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-carGroup">Allowed Car Groups:</label>
+                                        <select id="settings-carGroup" name="settings-carGroup">
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Driver:</label>
+                                    <div class="formElement">
+                                        <label for="settings-trackMedalsRequirement">Track Medals Required:</label>
+                                        <input type="number" id="settings-trackMedalsRequirement"
+                                            name="settings-trackMedalsRequirement" min="0" max="3" step="1"
+                                            placeholder="0">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-safetyRatingRequirement">Min. Safety Rating:</label>
+                                        <input type="number" id="settings-safetyRatingRequirement"
+                                            name="settings-safetyRatingRequirement" min="0" max="100" step="1"
+                                            placeholder="0">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-racecraftRatingRequirement">Min. Racecraft Rating:</label>
+                                        <input type="number" id="settings-racecraftRatingRequirement"
+                                            name="settings-racecraftRatingRequirement" min="0" max="100" step="1"
+                                            placeholder="0">
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>Formation Lap:</label>
+                                    <div class="formElement">
+                                        <label for="settings-formationLapType">Formation Lap Type:</label>
+                                        <select id="settings-formationLapType"
+                                            name="settings-formationLapType"></select>
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-shortFormationLap">Short formation Lap:</label>
+                                        <input type="checkbox" id="settings-shortFormationLap"
+                                            name="settings-shortFormationLap">
+                                    </div>
+                                </div>
+                                <div class="formBlock">
+                                    <label>General:</label>
+                                    <div class="formElement">
+                                        <label for="settings-centralEntryListPath">Entry List Path:</label>
+                                        <input type="text" id="settings-centralEntryListPath"
+                                            name="settings-centralEntryListPath" placeholder="Path to entry list">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-allowAutoDQ">Allow Auto DQ:</label>
+                                        <input type="checkbox" id="settings-allowAutoDQ" name="settings-allowAutoDQ">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-dumpLeaderboards">Dump Leaderboards:</label>
+                                        <input type="checkbox" id="settings-dumpLeaderboards"
+                                            name="settings-dumpLeaderboards">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-dumpEntryList">Dump Entrylist:</label>
+                                        <input type="checkbox" id="settings-dumpEntryList"
+                                            name="settings-dumpEntryList">
+                                    </div>
+                                    <div class="formElement">
+                                        <label>Randomize Track when Empty:</label>
+                                        <input type="checkbox" id="settings-randomizeTrackWhenEmpty"
+                                            name="settings-randomizeTrackWhenEmpty">
+                                    </div>
+                                    <div class="formElement">
+                                        <label for="settings-isRaceLocked">Race Locked:</label>
+                                        <input type="checkbox" id="settings-isRaceLocked" name="settings-isRaceLocked">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+    <div id="backdrop" class="backdrop hidden"></div>
+    <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
+    <footer>
+        <p>2025 ACC Server Tool <a href="https://github.com/flohrimohr/ACC_Server_Tools/blob/main/LICENSE"
+                target="_blank" rel="noopener" style="color: royalblue; text-decoration: none;">GNU Licensed</a></p>
+    </footer>
+</body>
+<script>
+    // Helper functions
+    const $ = selector => document.querySelector(selector);
+    const $$ = selector => document.querySelectorAll(selector);
+    const $id = id => document.getElementById(id);
+
+    // icons
+    const icons = {
+        download: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px" height="20px"><path d="M5,20h14c1.1,0,2-0.9,2-2v-4h-2v4H5v-4H3v4C3,19.1,3.9,20,5,20z M19,9h-4V3H9v6H5l7,7L19,9z"/></svg>`,
+        delete: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px" height="20px"><path d="M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4Z"/></svg>`,
+    };
+
+    // sort lists by name
+    carList.sort((a, b) => a.name.localeCompare(b.name));
+    tracks.sort((a, b) => a.name.localeCompare(b.name));
+
+    // readonly tracks and cars
+    const readonlyTracks = [...tracks];
+    const readonlyCars = [...carList];
+    Object.freeze(readonlyTracks);
+    Object.freeze(readonlyCars);
+
+    const wordList = [
+        "apple", "blue", "cat", "dog", "fish", "green", "house", "jump", "kite", "lake",
+        "moon", "note", "open", "pink", "queen", "rain", "star", "tree", "user", "view",
+        "wolf", "yard", "zoom", "fast", "gold", "hill", "iron", "leaf", "mint", "nest",
+        "owl", "park", "quiz", "rock", "sun", "top", "unit", "vase", "wind", "xray",
+        "yarn", "zebra", "brave", "calm", "dawn", "eagle", "flame", "glow", "heart", "island",
+        "jewel", "light", "mango", "nova", "ocean", "pearl", "quest", "river", "silk", "tiger",
+        "unity", "valor", "whale", "xenon", "yodel", "zephyr", "amber", "breeze", "crystal",
+        "dusk", "ember", "frost", "gale", "horizon", "indigo", "jungle"
+    ];
+
+    // DRY helpers
+    function setOptions(select, items, valueKey, textKey, filterFn) {
+        select.innerHTML = '';
+        console.log(Array.isArray(textKey));
+        items.filter(filterFn || (() => true)).forEach(item => {
+            const option = document.createElement('option');
+            option.value = item[valueKey];
+            option.textContent = Array.isArray(textKey) ? textKey.map(key => item[key]).join(' ') : item[textKey];
+            select.appendChild(option);
+        });
+    }
+    function setSelectOptionsByObj(select, obj, defaultKey) {
+        select.innerHTML = '';
+        Object.keys(obj).forEach(key => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = obj[key];
+            select.appendChild(option);
+        });
+        if (defaultKey) select.value = defaultKey;
+    }
+    function setFormValues(formMap, data) {
+        Object.entries(formMap).forEach(([selector, key]) => {
+            const el = $(selector);
+            if (!el) return;
+            if (el.type === 'checkbox') el.checked = !!data[key];
+            else el.value = data[key] ?? '';
+        });
+    }
+    function getFormValues(formMap) {
+        const result = {};
+        Object.entries(formMap).forEach(([selector, key]) => {
+            const el = $(selector);
+            if (!el) return;
+            if (el.type === 'checkbox') result[key] = el.checked;
+            else result[key] = el.value;
+        });
+        return result;
+    }
+    function resetInputs(selectors) {
+        selectors.forEach(selector => {
+            const input = $(selector);
+            if (!input) return;
+            if (input.type === 'checkbox') input.checked = false;
+            else input.value = '';
+            input.dispatchEvent(new Event('input'));
+        });
+    }
+    function inputFormChanges(selectors, callback) {
+        selectors.forEach(sel => {
+            const input = $(sel);
+            if (!input) return;
+            input.addEventListener('input', callback);
+            input.addEventListener('change', callback);
+        });
+    }
+    function showSnackbar(message, duration = 3000) {
+        const snackbar = $id('snackbar');
+        snackbar.textContent = message;
+        snackbar.style.visibility = 'visible';
+        snackbar.style.opacity = '1';
+        clearTimeout(snackbar._timeout);
+        snackbar._timeout = setTimeout(() => {
+            snackbar.style.opacity = '0';
+            snackbar.style.visibility = 'hidden';
+        }, duration);
+    }
+    function downloadJSON(filename, content) {
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+        element.setAttribute('download', filename);
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+    function $inputValueOrPlaceholder(inputSelector) {
+        const input = $(inputSelector);
+        return input.value.trim() !== '' ? input.value.trim() : input.placeholder;
+    }
+    const boolToInt = value => value ? 1 : 0;
+    const intToBool = value => value === 1;
+
+    // Storage helpers
+    const Storages = {
+        keepChanges: 'kc',
+        driver: 'driver',
+        bop: 'bop',
+        entryList: 'entryList',
+        event: 'event',
+        rules: 'rules',
+        settings: 'settings',
+    };
+    let read = {};
+    function readLocalStorage(key, defaultValue) {
+        const item = localStorage.getItem(key);
+        read[key] = true;
+        if (item) {
+            try { return JSON.parse(item); } catch (e) { return defaultValue; }
+        }
+        return defaultValue;
+    }
+    function writeLocalStorage(key, value) {
+        if (!read[key]) return;
+        localStorage.setItem(key, JSON.stringify(value));
+    }
+    function clearLocalStorage() {
+        Object.keys(localStorage).forEach(k => {
+            if (k == Storages.keepChanges) return;
+            localStorage.removeItem(k);
+        });
+    }
+    let keepChanges = readLocalStorage(Storages.keepChanges, false);
+    let forms = {};
+
+    function uploadJSON(callback) {
+        const fileInput = $id('jsonFileInput');
+        fileInput.value = '';
+        fileInput.onchange = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    callback(jsonData);
+                    showSnackbar('JSON file loaded successfully.');
+                } catch (error) {
+                    console.error('Error parsing JSON file:', error);
+                    showSnackbar('Error parsing JSON file.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        };
+        fileInput.click();
+    }
+
+    function setupUploadDownloadButtons(viewId, uploadCallback, downloadCallback) {
+        const container = $id(`${viewId}-uploadDownloadContainer`);
+        container.appendChild($id('upload-download-buttons').content.cloneNode(true));
+        container.querySelector('.uploadBtn').id = `${viewId}-uploadBtn`;
+        container.querySelector('.downloadBtn').id = `${viewId}-downloadBtn`;
+        container.querySelector('.uploadBtn').onclick = uploadCallback;
+        container.querySelector('.downloadBtn').onclick = downloadCallback;
+    }
+
+    function setUpTrackSelect(prefix) {
+        const select = $(`select[name="${prefix}-track"]`);
+        setOptions(select, tracks, 'id', 'name', null);
+        addDefaultOption(select, '-- Choose a Track --')
+    }
+
+    function setUpCarSelect(prefix) {
+        const select = $(`select[name="${prefix}-car"]`);
+        setOptions(select, carList, 'id', 'name', null);
+        addDefaultOption(select, '-- Choose a Car --')
+    }
+
+    function addDefaultOption(select, option) {
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = option;
+        select.insertBefore(defaultOption, select.firstChild);
+        select.value = '';
+    }
+
+    function setUpCarFilter(prefix, filterCb) {
+        const checkBoxes = $(`div[name="${prefix}-groupCheckBoxes"]`);
+        checkBoxes.innerHTML = '';
+
+        Object.keys(groups).forEach(group => {
+            checkBoxes.innerHTML += `<label class="pointer"><input type="checkbox" class="${prefix}-group-filter" value="${group}"> ${group}</label>`;
+        });
+
+        function filterCarsByGroup() {
+            const checkedGroups = Array.from($$(`.${prefix}-group-filter`)).filter(cb => cb.checked).map(cb => cb.value);
+            filterCb(checkedGroups);
+        }
+        $$(`.${prefix}-group-filter`).forEach(cb => cb.addEventListener('change', filterCarsByGroup));
+    }
+
+    function generatePassword(inputId) {
+        let password = "";
+        while (password.length < 12) {
+            password += wordList[Math.floor(Math.random() * wordList.length)];
+        }
+        $id(inputId).value = password;
+        $id(inputId).dispatchEvent(new Event('input'));
+    }
+
+    function handleMenu() {
+        const btn = $('#menu-btn');
+        const menu = $('#menu-popup');
+        function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+        btn.addEventListener('click', e => {
+            menu.style.display = 'block';
+            const rect = btn.getBoundingClientRect();
+            const menuRect = menu.getBoundingClientRect();
+            const vw = window.innerWidth, vh = window.innerHeight;
+            let left = rect.left, top = rect.bottom + 8;
+            if (left + menuRect.width + 16 > vw) left = vw - menuRect.width - 16;
+            left = clamp(left, 16, vw - menuRect.width - 16);
+            if (top + menuRect.height + 16 > vh) top = rect.top - menuRect.height - 8;
+            top = clamp(top, 16, vh - menuRect.height - 16);
+            menu.style.left = left + 'px';
+            menu.style.top = top + 'px';
+        });
+        window.addEventListener('resize', () => { if (menu.style.display === 'block') btn.click(); });
+        document.addEventListener('mousedown', e => {
+            if (menu.style.display === 'block' && !menu.contains(e.target) && e.target !== btn) hideMenu();
+        });
+        document.addEventListener('click', function (event) {
+            var isClickInside = menu.contains(event.target) || btn.contains(event.target);
+            if (!isClickInside) hideMenu();
+        });
+        window.addEventListener('scroll', () => hideMenu());
+        window.addEventListener('resize', () => hideMenu());
+        showMenu = () => { if (menu.style.display === 'none') menu.style.display = 'block'; }
+        hideMenu = () => { if (menu.style.display === 'block') menu.style.display = 'none'; }
+    }
+
+    function handleNavigation() {
+        const views = [
+            {
+                target: "#driver",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#000"><path d="M480-480Zm80 240q100 0 170-70t70-170q0-101-73.5-170.5T550-720q-48 0-93 11t-87 33l100 40q41 17 65.5 52.5T560-504q0 60-41.5 102T418-360H162q-2 24-2 54.5v65.5h400ZM176-440h240q27 0 45.5-18.5T480-504q0-19-10.5-34.5T440-562l-148-60q-42 37-71.5 84T176-440Zm384 280H160q-33 0-56.5-23.5T80-240v-90q0-98 37-183.5t100.5-149Q281-726 367-763t183-37q68 0 128 25t105 68.5Q828-663 854-605t26 125q0 66-25 124.5t-68.5 102Q743-210 684.5-185T560-160Z"/></svg>`,
+                title: "Driver Manager",
+                description: "Manage Drivers"
+            },
+            {
+                target: "#entryList",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#000"><path d="M640-120q-33 0-56.5-23.5T560-200v-160q0-33 23.5-56.5T640-440h160q33 0 56.5 23.5T880-360v160q0 33-23.5 56.5T800-120H640Zm0-80h160v-160H640v160ZM80-240v-80h360v80H80Zm560-280q-33 0-56.5-23.5T560-600v-160q0-33 23.5-56.5T640-840h160q33 0 56.5 23.5T880-760v160q0 33-23.5 56.5T800-520H640Zm0-80h160v-160H640v160ZM80-640v-80h360v80H80Zm640 360Zm0-400Z"/></svg>`,
+                title: "Entry List Manager",
+                description: "Customize Entry Lists"
+            },
+            {
+                target: "#bop",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#000"><path d="M520-600v-80h120v-160h80v160h120v80H520Zm120 480v-400h80v400h-80Zm-400 0v-160H120v-80h320v80H320v160h-80Zm0-320v-400h80v400h-80Z"/></svg>`,
+                title: "BOP Manager",
+                description: "Manage Balance of Performance"
+            },
+            {
+                target: "#event",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#000"><path d="m388-212-56-56 92-92-92-92 56-56 92 92 92-92 56 56-92 92 92 92-56 56-92-92-92 92ZM200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Z"/></svg>`,
+                title: "Event Manager",
+                description: "Organize Events"
+            },
+            {
+                target: "#rules",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#000"><path d="m576-160-56-56 104-104-104-104 56-56 104 104 104-104 56 56-104 104 104 104-56 56-104-104-104 104Zm79-360L513-662l56-56 85 85 170-170 56 57-225 226ZM80-280v-80h360v80H80Zm0-320v-80h360v80H80Z"/></svg>`,
+                title: "Rules Manager",
+                description: "Set Server Rules"
+            },
+            {
+                target: "#settings",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#000"><path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z"/></svg>`,
+                title: "Settings",
+                description: "Configure Server Settings"
+            }
+        ];
+        const container = $('#tool-cards-container');
+        const template = $('#tool-card-template');
+        const navbar = $('#header-navbar');
+        views.forEach(view => {
+            const clone = template.content.cloneNode(true);
+            const cardDiv = clone.querySelector('.tool-card');
+            cardDiv.setAttribute('data-target', view.target);
+            cardDiv.querySelector('.tool-card-icon').innerHTML = view.icon;
+            cardDiv.querySelector('.tool-card-title').textContent = view.title;
+            cardDiv.querySelector('.tool-card-description').textContent = view.description;
+            cardDiv.addEventListener('click', () => { window.location.hash = view.target; });
+            container.appendChild(clone);
+            const navButton = document.createElement('button');
+            navButton.href = view.target;
+            navButton.className = 'navButton';
+            navButton.textContent = view.title;
+            navbar.appendChild(navButton);
+            navButton.addEventListener('click', () => { window.location.hash = view.target; });
+        });
+        $('#nav-overview').href = '#overview';
+        $('#nav-overview').addEventListener('click', () => { changeHash('#overview'); });
+        function changeHash(hash) { window.location.hash = hash; }
+        function showViewByHash() {
+            const hash = window.location.hash || '#overview';
+            const hashId = hash.replace('#', '');
+            const activeView = $id(`view-${hashId}`) || $id('view-overview');
+            $$('.view').forEach(viewDiv => viewDiv.classList.remove('activeView'));
+            if (activeView) activeView.classList.add('activeView');
+            Array.from(navbar.children).forEach(navButton => {
+                navButton.classList.remove('activeView');
+                if (navButton.href === hash) navButton.classList.add('activeView');
+            });
+        }
+        window.addEventListener('hashchange', showViewByHash);
+        showViewByHash();
+    }
+
+    // --- View Handlers ---
+    function handleViews() {
+        // Driver Manager
+        function handleDriverManager() {
+            const identifier = 'driver';
+            setupUploadDownloadButtons(identifier, uploadFile, downloadFile);
+            const inputs = [
+                'input[name=driverFirstName]', 'input[name=driverLastName]', 'input[name=driverShortName]',
+                'select[name=driverCategory]', 'input[name=driverPlayerID]'
+            ];
+            $('#driver-tableViewBtn').addEventListener('click', () => {
+                $('#driver-tableViewBtn').classList.add('active');
+                $('#driver-editorViewBtn').classList.remove('active');
+                $('#driver-tableEditorContainer').style.display = 'block';
+                $('#driver-textEditorContainer').style.display = 'none';
+            });
+            $('#driver-editorViewBtn').addEventListener('click', () => {
+                $('#driver-editorViewBtn').classList.add('active');
+                $('#driver-tableViewBtn').classList.remove('active');
+                $('#driver-tableEditorContainer').style.display = 'none';
+                $('#driver-textEditorContainer').style.display = 'block';
+            });
+            function uploadFile() {
+                uploadJSON((data) => { reset(); populateTable(data); updateTextEditor(data); });
+            }
+            function downloadFile() {
+                downloadJSON(`driver.json`, $('#driver-jsonTextEditor').value);
+            }
+            const readResult = readLocalStorage(Storages.driver, { drivers: [] });
+            if (readResult['drivers'] && readResult['drivers'].length > 0) {
+                populateTable(readResult);
+                updateTextEditor(readResult);
+            }
+            function updateTextEditor(data) {
+                forms[Storages.driver] = data;
+                if (keepChanges) writeLocalStorage(Storages.driver, data);
+                $('#driver-jsonTextEditor').value = JSON.stringify(data, null, 4);
+            }
+            function suggestShortName() {
+                const firstName = $id('driverFirstName').value.trim();
+                const lastName = $id('driverLastName').value.trim();
+                const shortNameInput = $id('driverShortName');
+                shortNameInput.placeholder = (firstName.length > 0 && lastName.length > 1)
+                    ? (firstName[0] + lastName.slice(0, 2)).toUpperCase()
+                    : "Short Name";
+            }
+            $id('driverFirstName').addEventListener('input', suggestShortName);
+            $id('driverLastName').addEventListener('input', suggestShortName);
+            $('#addDriverBtn').addEventListener('click', function () {
+                const firstName = $('#driverFirstName').value.trim();
+                const lastName = $('#driverLastName').value.trim();
+                const driverCategory = parseInt($('#driverCategory').value);
+                const playerID = $('#driverPlayerID').value.trim();
+                if (!firstName || !lastName || isNaN(driverCategory) || !playerID) {
+                    showSnackbar('Please fill in all fields.');
+                    return;
+                }
+                const shortName = $('#driverShortName').value.trim() || $('#driverShortName').placeholder;
+                if (shortName.length !== 3) {
+                    showSnackbar('Short Name must be exactly 3 characters.');
+                    return;
+                }
+                const data = readLocalStorage(Storages.driver, { drivers: [] });
+                data['drivers'].push({ firstName, lastName, shortName, driverCategory, playerID });
+                populateTable(data);
+                updateTextEditor(data);
+                resetInputs(inputs);
+                $('#driverCategory').selectedIndex = 0;
+            });
+            function populateTable(data) {
+                const tableBody = $('#driver-tableBody');
+                tableBody.innerHTML = '';
+                if (!data['drivers'] || data['drivers'].length === 0) return;
+                data['drivers'].forEach((driver, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="text" value="${driver.firstName || ''}" data-index="${index}" data-field="firstName"></td>
+                        <td><input type="text" value="${driver.lastName || ''}" data-index="${index}" data-field="lastName"></td>
+                        <td><input type="text" value="${driver.shortName || ''}" data-index="${index}" data-field="shortName"></td>
+                        <td>
+                            <select data-index="${index}" data-field="driverCategory">
+                                <option value="0" ${driver.driverCategory === 0 ? 'selected' : ''}>Bronze</option>
+                                <option value="1" ${driver.driverCategory === 1 ? 'selected' : ''}>Silver</option>
+                                <option value="2" ${driver.driverCategory === 2 ? 'selected' : ''}>Gold</option>
+                                <option value="3" ${driver.driverCategory === 3 ? 'selected' : ''}>Platinum</option>
+                            </select>
+                        </td>
+                        <td><input type="text" value="${driver.playerID || ''}" data-index="${index}" data-field="playerID"></td>
+                        <td name="driver-delete" class="driver-delete delete actions">${icons.delete}</td>
+                    `;
+                    row.querySelectorAll('input').forEach(input => {
+                        input.addEventListener('input', function () {
+                            const rowIndex = this.getAttribute('data-index');
+                            const field = this.getAttribute('data-field');
+                            data['drivers'][rowIndex][field] = this.value;
+                            updateTextEditor(data);
+                        });
+                    });
+                    row.querySelectorAll('select').forEach(select => {
+                        select.addEventListener('change', function () {
+                            const rowIndex = this.getAttribute('data-index');
+                            const field = this.getAttribute('data-field');
+                            data['drivers'][rowIndex][field] = parseInt(this.value);
+                            updateTextEditor(data);
+                        });
+                    });
+                    row.querySelector('.driver-delete').addEventListener('click', function () {
+                        data['drivers'].splice(index, 1);
+                        populateTable(data);
+                        updateTextEditor(data);
+                    });
+                    tableBody.appendChild(row);
+                });
+            }
+            function reset() {
+                $('#driver-tableBody').innerHTML = '';
+                $('#driver-jsonTextEditor').value = '';
+                clearLocalStorage(Storages.driver);
+                resetInputs(inputs);
+                $('#driverCategory').selectedIndex = 0;
+            }
+            $('#resetDriver').addEventListener('click', reset);
+        }
+
+        // Entry List Manager
+        function handleEntryListManager() {
+            const identifier = 'entry';
+            const driverJson = $('#driver-jsonTextEditor').value;
+            let driverList = driverJson ? JSON.parse(driverJson).drivers : [];
+            const jsonTextEditor = $('#entry-jsonTextEditor');
+            const inputs = ['input[name="entry-raceNumber"]',
+                'input[name="entry-defaultGridPosition"]',
+                'input[name="entry-handicapWeight"]',
+                'input[name="entry-handicapRestrictor"]',
+                'input[name="entry-overrideDriverInfo"]',
+                'select[name="entry-car"]',
+                'select[name="entry-driver"]',
+            ];
+
+            setupUploadDownloadButtons(identifier, uploadFile, downloadFile);
+            setUpCarSelect(identifier);
+            setUpCarFilter(identifier, filterCarSelect);
+
+            function filterCarSelect(checkedGroups) {
+                const select = $(`select[name="${identifier}-car"]`);
+                setOptions(select, carList, 'id', 'name',
+                    car => checkedGroups.length === 0 || checkedGroups.includes(car.group));
+                addDefaultOption(select, '-- Choose a Car --');
+            }
+            
+            function updateJsonEditor(data) {
+                jsonTextEditor.value = JSON.stringify(data, null, 2);
+                updateEntryTableFromJson();
+                forms[Storages.entryList] = data;
+
+                if (keepChanges) writeLocalStorage(Storages.entryList, data);
+            }
+
+            function uploadFile() {
+                uploadJSON(data => { reset(); updateJsonEditor(data); });
+            }
+            function downloadFile() {
+                downloadJSON('entryList.json', jsonTextEditor.value);
+            }
+
+            const entryListData = readLocalStorage(Storages.entryList, { entries: [], forceEntryList: 1 });
+            if (entryListData && Object.keys(entryListData).length > 0) {
+                updateJsonEditor(entryListData);
+                updateEntryTableFromJson();
+            }
+
+            document.getElementById('addEntry').onclick = function () {
+                const entryDriverTableBody = document.getElementById('entry-driverTableBody');
+                const selectedDrivers = Array.from(entryDriverTableBody.querySelectorAll('tr')).map(row => {
+                    const cells = row.querySelectorAll('td');
+                    return {
+                        firstName: cells[0].textContent,
+                        lastName: cells[1].textContent,
+                        shortName: cells[2].textContent,
+                        driverCategory: parseInt(cells[3].textContent),
+                        playerID: cells[4].textContent,
+                        nationality: 2
+                    };
+                });
+                const selectedDriver = selectedDrivers.length > 0 ? selectedDrivers : null;
+                if (!selectedDriver) {
+                    showSnackbar('Please select a driver.');
+                    return;
+                }
+                const entry = {
+                    drivers: [selectedDriver],
+                    raceNumber: parseInt($('input[name="entry-raceNumber"]').value) || 0,
+                    forcedCarModel: parseInt($('select[name="entry-car"]').value) || 0,
+                    overrideDriverInfo: $('input[name="entry-overrideDriverInfo"]').checked ? 1 : 0,
+                    defaultGridPosition: parseInt($('input[name="entry-defaultGridPosition"]').value) || -1,
+                    ballastKg: parseInt($('input[name="entry-handicapWeight"]').value) || 0,
+                    restrictor: parseFloat($('input[name="entry-handicapRestrictor"]').value) || 0,
+                };
+                let entryListData = readLocalStorage(Storages.entryList, { entries: [], forceEntryList: 1 });
+                entryListData.entries.push(entry);
+                entryListData.forceEntryList = 1;
+                jsonTextEditor.value = JSON.stringify(entryListData, null, 2);
+                if (keepChanges) writeLocalStorage(Storages.entryList, entryListData);
+                resetInputs(inputs);
+                setUpCarSelect(identifier);
+                setUpCarFilter(identifier, filterCarSelect);
+                document.getElementById('entry-driverTableBody').innerHTML = '';
+            }
+
+            function reset() {
+                resetInputs(inputs);
+                document.getElementById('entry-driverTableBody').innerHTML = '';
+                document.getElementById('entry-tableBody').innerHTML = '';
+                jsonTextEditor.value = '';
+                clearLocalStorage(Storages.entryList);
+                setUpCarSelect(identifier);
+                setUpCarFilter(identifier, filterCarSelect);
+            }
+            $('#resetEntryList').addEventListener('click', reset);
+
+            $('#entry-textEditorContainer').addEventListener('click', () => {
+                jsonTextEditor.select();
+                document.execCommand('copy');
+                showSnackbar('JSON copied to clipboard.');
+            });
+
+
+            // Helper to switch views
+            document.getElementById('entry-tableViewBtn').onclick = function () {
+                document.getElementById('entry-tableEditorContainer').style.display = '';
+                document.getElementById('entry-textEditorContainer').style.display = 'none';
+                this.classList.add('active');
+                document.getElementById('entry-editorViewBtn').classList.remove('active');
+            };
+            document.getElementById('entry-editorViewBtn').onclick = function () {
+                document.getElementById('entry-tableEditorContainer').style.display = 'none';
+                document.getElementById('entry-textEditorContainer').style.display = '';
+                this.classList.add('active');
+                document.getElementById('entry-tableViewBtn').classList.remove('active');
+            };
+
+            // Update table when JSON changes
+            function updateEntryTableFromJson() {
+                const tbody = document.getElementById('entry-tableBody');
+                tbody.innerHTML = '';
+                let entries;
+                try {
+                    entries = JSON.parse(document.getElementById('entry-jsonTextEditor').value).entries;
+                } catch {
+                    return;
+                }
+                console.log(entries);
+                if (!Array.isArray(entries)) return;
+                entries.forEach((entry, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<tr>
+                        <td>${entry.raceNumber || ''}</td>
+                        <td>${entry.forcedCarModel || ''}</td>
+                        <td>${entry.ballastKg || ''}</td>
+                        <td>${entry.restrictor || ''}</td>
+                        <td>
+                            ${Array.isArray(entry.drivers)
+                                ? entry.drivers.map(driverArr =>
+                                    Array.isArray(driverArr)
+                                        ? driverArr.map(d => d.shortName || '').join(', ')
+                                        : (driverArr.shortName || '')
+                                  ).join('; ')
+                                : ''}
+                        </td>
+                        <td name="entry-delete" class="entry-delete delete actions">${icons.delete}</td>
+                    </tr>`;
+                    tbody.appendChild(tr);
+                    // Add event listener for the remove button
+                    tr.querySelector('.entry-delete').addEventListener('click', function () {
+                        removeEntry(idx);
+                    });
+                });
+            }
+
+            function removeEntry(index) {
+                
+            }
+
+            // Listen for JSON changes
+            document.getElementById('entry-jsonTextEditor').addEventListener('input', updateEntryTableFromJson);
+
+            // Show table by default
+            document.getElementById('entry-tableEditorContainer').style.display = '';
+            document.getElementById('entry-textEditorContainer').style.display = 'none';
+            updateEntryTableFromJson();
+
+            document.getElementById('entry-addDriverBtn').onclick = function () {
+                console.log('clicked')
+                const entryDriverTableBody = document.getElementById('entry-driverTableBody');
+
+                // Create a modal for driver selection
+                let modal = document.createElement('div');
+                modal.style.cssText = `
+                    position:fixed;top:0;left:0;width:100vw;height:100vh;
+                    background:rgba(0,0,0,0.5);display:flex;
+                    align-items:center;justify-content:center;z-index:9999;
+                `;
+
+                let modalContent = document.createElement('div');
+                modalContent.style.cssText = `
+                    background:#fff;min-width:320px;padding:16px;border-radius:8px;
+                    max-height:80vh;overflow-y:auto;
+                `;
+
+                let title = document.createElement('h3');
+                title.textContent = 'Select Driver(s)';
+                modalContent.appendChild(title);
+
+                // List drivers from driver-tableBody
+                if (driverList.length === 0) {
+                    let noDrivers = document.createElement('div');
+                    noDrivers.textContent = 'No drivers available. Please add drivers first.';
+                    modalContent.appendChild(noDrivers);
+                } else {
+                    // Short modal for selecting drivers
+                    const form = document.createElement('form');
+                    form.style.gap = '0';
+                    driverList.forEach((d, i) => {
+                        const label = document.createElement('label');
+                        label.innerHTML = `<input type="checkbox" value="${d.playerID}"> ${d.firstName} ${d.lastName} (${d.shortName})`;
+                        form.appendChild(label);
+                    });
+                    modalContent.appendChild(form);
+
+                    const btnArea = document.createElement('div');
+                    btnArea.style.marginTop = '16px';
+                    btnArea.style.display = 'flex';
+                    btnArea.style.justifyContent = 'flex-end';
+                    btnArea.style.gap = '8px';
+
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.type = 'button';
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.onclick = () => document.body.removeChild(modal);
+
+                    const addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.textContent = 'Add Selected';
+                    addBtn.onclick = () => {
+                        Array.from(form.querySelectorAll('input[type=checkbox]:checked')).forEach(cb => {
+                            const idx = Array.from(form.querySelectorAll('input[type=checkbox]')).indexOf(cb);
+                            const d = driverList[idx];
+                            if (d) {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `<td>${d.firstName}</td><td>${d.lastName}</td><td>${d.shortName}</td><td>${d.driverCategory}</td><td>${d.playerID}</td><td class="delete-driver-row" style="cursor:pointer;">${icons.delete}</td>`;
+                                row.querySelector('.delete-driver-row').onclick = function () {
+                                    row.remove();
+                                };
+                                entryDriverTableBody.appendChild(row);
+                            }
+                        });
+                        document.body.removeChild(modal);
+                    };
+
+                    btnArea.append(cancelBtn, addBtn);
+                    modalContent.appendChild(btnArea);
+
+                    document.body.appendChild(modal);
+                    modal.appendChild(modalContent);
+
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            document.body.removeChild(modal);
+                        }
+                    });
+                }
+            };
+        }
+
+        // Event Manager
+        function handleEventManager() {
+            const identifier = 'event';
+            setupUploadDownloadButtons(identifier, uploadFile, downloadFile);
+            let sessions = [
+                { sessionType: sessionTypes.Practice, hourOfDay: 12, dayOfWeekend: 1, timeMultiplier: 1, sessionDurationMinutes: 60 },
+                { sessionType: sessionTypes.Qualifying, hourOfDay: 12, dayOfWeekend: 2, timeMultiplier: 1, sessionDurationMinutes: 15 },
+                { sessionType: sessionTypes.Race, hourOfDay: 12, dayOfWeekend: 3, timeMultiplier: 1, sessionDurationMinutes: 60 }
+            ];
+            const originalSessions = JSON.parse(JSON.stringify(sessions));
+            setUpTrackSelect(identifier);
+            const jsonTextEditor = $id('event-jsonTextEditor');
+            function downloadFile() {
+                const trackName = $('select[name="event-track"]').value;
+                if (!trackName) return showSnackbar('Please select a track first.');
+                downloadJSON(`event.json`, jsonTextEditor.value);
+            }
+            function uploadFile() {
+                uploadJSON((data) => { reset(); sessions = []; $id('event-sessionsTableBody').innerHTML = ''; updateForm(data); updateJsonEditor(); });
+            }
+            function updateForm(jsonData) {
+                [
+                    ['select[name="event-track"]', 'track'],
+                    ['input[name="event-configVersion"]', 'configVersion'],
+                    ['input[name="event-preRaceWaitingTimeSeconds"]', 'preRaceWaitingTimeSeconds'],
+                    ['input[name="event-postQualySeconds"]', 'postQualySeconds'],
+                    ['input[name="event-postRaceSeconds"]', 'postRaceSeconds'],
+                    ['input[name="event-sessionOverTimeSeconds"]', 'sessionOverTimeSeconds'],
+                    ['input[name="event-trackTemp"]', 'trackTemp'],
+                    ['input[name="event-ambientTemp"]', 'ambientTemp'],
+                    ['input[name="event-cloudLevel"]', 'cloudLevel'],
+                    ['input[name="event-rain"]', 'rain'],
+                    ['input[name="event-weatherRandomness"]', 'weatherRandomness']
+                ].forEach(([selector, key]) => {
+                    if (jsonData[key] !== undefined) $(selector).value = jsonData[key];
+                });
+                if (Array.isArray(jsonData.sessions)) {
+                    sessions = jsonData.sessions;
+                    renderSessions();
+                }
+            }
+            function updateJsonEditor() {
+                const data = {
+                    track: $('select[name="event-track"]').value,
+                    configVersion: parseInt($inputValueOrPlaceholder('input[name="event-configVersion"]')) || 1,
+                    preRaceWaitingTimeSeconds: parseInt($inputValueOrPlaceholder('input[name="event-preRaceWaitingTimeSeconds"]')) || 0,
+                    postQualySeconds: parseInt($inputValueOrPlaceholder('input[name="event-postQualySeconds"]')) || 0,
+                    postRaceSeconds: parseInt($inputValueOrPlaceholder('input[name="event-postRaceSeconds"]')) || 0,
+                    sessionOverTimeSeconds: parseInt($inputValueOrPlaceholder('input[name="event-sessionOverTimeSeconds"]')) || 0,
+                    ambientTemp: parseInt($inputValueOrPlaceholder('input[name="event-ambientTemp"]')) || 20,
+                    trackTemp: parseInt($inputValueOrPlaceholder('input[name="event-trackTemp"]')) || 30,
+                    cloudLevel: parseFloat(($inputValueOrPlaceholder('input[name="event-cloudLevel"]') || 0)).toFixed(2) * 1,
+                    rain: parseFloat($inputValueOrPlaceholder('input[name="event-rain"]')) || 0,
+                    weatherRandomness: parseInt($inputValueOrPlaceholder('input[name="event-weatherRandomness"]')) || 0,
+                    sessions: sessions
+                };
+                forms[Storages.event] = data;
+                if (keepChanges) writeLocalStorage(Storages.event, data);
+                jsonTextEditor.value = JSON.stringify(data, null, 4);
+            }
+            const inputs = [
+                'select[name="event-track"]',
+                'input[name="event-configVersion"]',
+                'input[name="event-preRaceWaitingTimeSeconds"]',
+                'input[name="event-postQualySeconds"]',
+                'input[name="event-postRaceSeconds"]',
+                'input[name="event-sessionOverTimeSeconds"]',
+                'input[name="event-ambientTemp"]',
+                'input[name="event-trackTemp"]',
+                'input[name="event-cloudLevel"]',
+                'input[name="event-rain"]',
+                'input[name="event-weatherRandomness"]'
+            ];
+            inputFormChanges(inputs, updateJsonEditor);
+            updateJsonEditor();
+            $id('event-textEditorContainer').addEventListener('click', () => {
+                jsonTextEditor.select();
+                document.execCommand('copy');
+                showSnackbar('JSON copied to clipboard.');
+            });
+            function renderSessions() {
+                const tbody = $id('event-sessionsTableBody');
+                tbody.innerHTML = '';
+                sessions.forEach((session, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <div role="group" aria-label="Session Type" style="display: flex; flex-wrap: nowrap; gap: 4px;">
+                                ${Object.keys(sessionTypes).map(type => `
+                                    <button type="button"
+                                        class="typebtn ${session.sessionType === sessionTypes[type] ? ' active' : ''}"
+                                        data-type="${sessionTypes[type]}"
+                                        onclick="event_changeSessionType(${idx}, '${sessionTypes[type]}')"
+                                        style="white-space: nowrap;">
+                                        ${sessionTypes[type]}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </td>
+                        <td data-field="hourOfDay"></td>
+                        <td data-field="dayOfWeekend"></td>
+                        <td data-field="timeMultiplier"></td>
+                        <td data-field="sessionDurationMinutes"></td>
+                        <td name="event-delete" class="event-delete delete actions" onclick="event_removeSession(${idx})">${icons.delete}</td>
+                    `;
+                    tr.style.width = '100%';
+                    tbody.appendChild(tr);
+                    ['hourOfDay', 'dayOfWeekend', 'timeMultiplier', 'sessionDurationMinutes'].forEach((field, i) => {
+                        const td = tr.children[i + 1];
+                        const value = session[field];
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.value = value;
+                        input.style.width = '60px';
+                        const validation = {
+                            hourOfDay: { min: 0, max: 23 },
+                            dayOfWeekend: { min: 0, max: 3 },
+                            timeMultiplier: { min: 0, max: 24 },
+                            sessionDurationMinutes: { min: 0, max: 1440 }
+                        };
+                        input.min = validation[field].min;
+                        input.max = validation[field].max;
+                        input.placeholder = validation[field].min;
+                        input.addEventListener('input', () => {
+                            let newValue = input.value;
+                            if (field === 'timeMultiplier') newValue = parseFloat(newValue) || 1.0;
+                            else newValue = parseInt(newValue) || validation[field].min;
+                            newValue = Math.max(validation[field].min, Math.min(validation[field].max, newValue));
+                            sessions[idx][field] = newValue;
+                            updateJsonEditor();
+                        });
+                        td.textContent = '';
+                        td.appendChild(input);
+                    });
+                });
+            }
+            $id('event-addSessionBtn').addEventListener('click', () => {
+                sessions.push({
+                    sessionType: sessionTypes['Practice'],
+                    hourOfDay: 12,
+                    dayOfWeekend: 1,
+                    timeMultiplier: 1,
+                    sessionDurationMinutes: 60,
+                });
+                $id('event-sessionsTableBody').innerHTML = '';
+                renderSessions();
+                updateJsonEditor();
+            });
+            window['event_removeSession'] = function (idx) {
+                sessions.splice(idx, 1);
+                $id('event-sessionsTableBody').innerHTML = '';
+                renderSessions();
+                updateJsonEditor();
+            };
+            window['event_changeSessionType'] = function (idx, type) {
+                if (sessions[idx]) {
+                    sessions[idx].sessionType = type;
+                    $id('event-sessionsTableBody').innerHTML = '';
+                    renderSessions();
+                    updateJsonEditor();
+                }
+            };
+            const readResult = readLocalStorage(Storages.event, {});
+            if (readResult && Object.keys(readResult).length > 0) {
+                updateForm(readResult);
+                updateJsonEditor();
+                sessions = readResult.sessions || [];
+                renderSessions();
+            }
+            function reset() {
+                sessions = JSON.parse(JSON.stringify(originalSessions));
+                $id('event-sessionsTableBody').innerHTML = '';
+                resetInputs(inputs);
+                renderSessions();
+                updateJsonEditor();
+            }
+            renderSessions();
+            $('#resetEvent').addEventListener('click', reset);
+        }
+
+        // BOP Manager
+        function handleBopManager() {
+            const identifier = 'bop';
+            setupUploadDownloadButtons(identifier, uploadFile, downloadFile);
+            setUpTrackSelect(identifier);
+            setUpCarSelect(identifier);
+            setUpCarFilter(identifier, function (checkedGroups) {
+                const select = $(`select[name="${identifier}-car"]`);
+                setOptions(select, carList, 'id', 'name',
+                    car => (checkedGroups.length === 0 || checkedGroups.includes(car.group)) &&
+                        !Array.from($('tbody[name="bop-tableBody"]').children).some(row => {
+                            const carName = row.children[0].textContent;
+                            const carObj = readonlyCars.find(c => c.name === carName);
+                            return carObj && carObj.id === car.id;
+                        })
+                );
+                addDefaultOption(select, '-- Choose a Car --');
+            });
+            const tableBody = $('tbody[name="bop-tableBody"]');
+            const jsonTextEditor = $('textarea[name="bop-jsonTextEditor"]');
+            const tableViewBtn = $id('bop-tableViewBtn');
+            const editorViewBtn = $id('bop-editorViewBtn');
+            const tableEditorContainer = $id('bop-tableEditorContainer');
+            const textEditorContainer = $id('bop-textEditorContainer');
+            const inputs = [
+                'select[name="bop-track"]',
+                'select[name="bop-car"]',
+                'input[name="bop-weight"]',
+                'input[name="bop-restrictor"]'
+            ];
+            $('#addBop').addEventListener('click', e => {
+                e.preventDefault();
+                const carId = parseInt($('select[name="bop-car"]').value);
+                const weight = parseInt($inputValueOrPlaceholder('input[name="bop-weight"]'));
+                const restrictor = parseFloat($inputValueOrPlaceholder('input[name="bop-restrictor"]'));
+                if (isNaN(weight) || weight < $('input[name="bop-weight"]').min || weight > $('input[name="bop-weight"]').max) return showSnackbar('Please enter a valid weight.');
+                if (isNaN(restrictor) || restrictor < $('input[name="bop-restrictor"]').min || restrictor > $('input[name="bop-restrictor"]').max) return showSnackbar('Please enter a valid restrictor.');
+                if (isNaN(carId)) return showSnackbar('Please select a car.');
+                const carName = readonlyCars.find(c => c.id === carId).name;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${carName}</td>
+                    <td>${weight}</td>
+                    <td>${restrictor}</td>
+                    <td name="bop-delete" class="bop-delete delete actions">${icons.delete}</td>`;
+                tableBody.appendChild(row);
+                [1, 2].forEach(idx => {
+                    row.children[idx].addEventListener('dblclick', function () {
+                        const cell = this, oldValue = cell.textContent;
+                        cell.innerHTML = `<input type="number" style="width:60px;" value="${oldValue}">`;
+                        const input = cell.firstChild;
+                        input.addEventListener('blur', () => {
+                            let val = idx === 1 ? parseInt(input.value) : parseFloat(input.value).toFixed(1);
+                            cell.textContent = isNaN(val) ? oldValue : val;
+                        });
+                        input.addEventListener('keydown', e => {
+                            if (e.key === 'Enter') input.blur();
+                            if (e.key === 'Escape') cell.textContent = oldValue;
+                        });
+                        input.focus();
+                    });
+                });
+                row.querySelector('.bop-delete').addEventListener('click', () => {
+                    const checkedGroups = Array.from($$('.bop-group-filter')).filter(cb => cb.checked).map(cb => cb.value);
+                    const carGroup = readonlyCars.find(c => c.id === carId).group;
+                    if (checkedGroups.length === 0 || checkedGroups.includes(carGroup)) {
+                        const carSelect = $('select[name="bop-car"]');
+                        const option = document.createElement('option');
+                        option.value = carId;
+                        option.textContent = carName;
+                        let inserted = false;
+                        for (let i = 1; i < carSelect.options.length; i++) {
+                            if (parseInt(carSelect.options[i].value) > carId) {
+                                carSelect.insertBefore(option, carSelect.options[i]);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                        if (!inserted) carSelect.appendChild(option);
+                    }
+                    row.remove();
+                });
+                const carOption = $(`select[name="bop-car"] option[value="${carId}"]`);
+                if (carOption) carOption.remove();
+                resetInputs(inputs.filter(sel => sel !== 'select[name="bop-track"]'));
+            });
+            function downloadFile() {
+                if (!$('select[name="bop-track"]').value) return showSnackbar('Please select a track first.');
+                if (!tableBody.children.length) return showSnackbar('No BOP entries to download.');
+                downloadJSON(`bop.json`, jsonTextEditor.value);
+            }
+            function uploadFile() {
+                uploadJSON(data => { reset(); populateTable(data); });
+            }
+            function populateTable(data) {
+                if (!data.entries || !Array.isArray(data.entries)) return showSnackbar('Invalid BOP data format.');
+                tableBody.innerHTML = '';
+                data.entries.forEach(entry => {
+                    const carObj = readonlyCars.find(c => c.id === entry.carModel);
+                    if (!carObj) return;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${carObj.name}</td>
+                        <td>${entry.ballastKg}</td>
+                        <td>${entry.restrictor !== undefined ? entry.restrictor : 0}</td>
+                        <td name="bop-delete" class="bop-delete delete actions">${icons.delete}</td>`;
+                    tableBody.appendChild(row);
+                    [1, 2].forEach(idx => {
+                        row.children[idx].addEventListener('dblclick', function () {
+                            const cell = this, oldValue = cell.textContent;
+                            cell.innerHTML = `<input type="number" style="width:60px;" value="${oldValue}">`;
+                            const input = cell.firstChild;
+                            input.addEventListener('blur', () => {
+                                let val = idx === 1 ? parseInt(input.value) : parseFloat(input.value).toFixed(1);
+                                cell.textContent = isNaN(val) ? oldValue : val;
+                            });
+                            input.addEventListener('keydown', e => {
+                                if (e.key === 'Enter') input.blur();
+                                if (e.key === 'Escape') cell.textContent = oldValue;
+                            });
+                            input.focus();
+                        });
+                    });
+                    row.querySelector('.bop-delete').addEventListener('click', () => {
+                        const carSelect = $('select[name="bop-car"]');
+                        const option = document.createElement('option');
+                        option.value = carObj.id;
+                        option.textContent = carObj.name;
+                        let inserted = false;
+                        const opts = Array.from(carSelect.options);
+                        for (let i = 1; i < opts.length; i++) {
+                            if (opts[i].text.localeCompare(carObj.name) > 0) {
+                                carSelect.insertBefore(option, opts[i]);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                        if (!inserted) carSelect.appendChild(option);
+                        row.remove();
+                    });
+                });
+                if (data.entries.length > 0) $('select[name="bop-track"]').value = data.entries[0].track;
+                data.entries.forEach(entry => {
+                    const carOption = $(`select[name="bop-car"] option[value="${entry.carModel}"]`);
+                    if (carOption) carOption.remove();
+                });
+                updateJsonEditor();
+            }
+            tableViewBtn.addEventListener('click', () => {
+                tableViewBtn.classList.add('active');
+                editorViewBtn.classList.remove('active');
+                tableEditorContainer.style.display = '';
+                textEditorContainer.style.display = 'none';
+            });
+            editorViewBtn.addEventListener('click', () => {
+                editorViewBtn.classList.add('active');
+                tableViewBtn.classList.remove('active');
+                tableEditorContainer.style.display = 'none';
+                textEditorContainer.style.display = 'flex';
+            });
+            function getTableData(tbody) {
+                return {
+                    entries: Array.from(tbody.children).map(row => {
+                        const carName = row.children[0].textContent;
+                        const carObj = readonlyCars.find(c => c.name === carName);
+                        return {
+                            track: $('select[name="bop-track"]').value,
+                            carModel: carObj ? carObj.id : null,
+                            ballastKg: parseInt(row.children[1].textContent),
+                            restrictor: parseFloat(row.children[2].textContent)
+                        };
+                    })
+                };
+            }
+            function updateJsonEditor() {
+                const data = getTableData(tableBody);
+                forms[Storages.bop] = data;
+                if (keepChanges) writeLocalStorage(Storages.bop, data);
+                jsonTextEditor.value = JSON.stringify(data, null, 2);
+            }
+            updateJsonEditor();
+            new MutationObserver(updateJsonEditor).observe(tableBody, { childList: true, subtree: true });
+            $('select[name="bop-track"]').addEventListener('change', updateJsonEditor);
+            $id('bop-textEditorContainer').addEventListener('click', () => {
+                jsonTextEditor.select();
+                document.execCommand('copy');
+                showSnackbar('JSON copied to clipboard.');
+            });
+            const readResult = readLocalStorage(Storages.bop, { entries: [] });
+            if (readResult.entries.length > 0) {
+                populateTable(readResult);
+                updateJsonEditor();
+            }
+            function reset() {
+                clearLocalStorage(Storages.bop);
+                tableBody.innerHTML = '';
+                resetInputs(inputs);
+                updateJsonEditor();
+                setUpCarSelect(identifier);
+                $$('.bop-group-filter').forEach(cb => cb.checked = false);
+            }
+            $('#resetBop').addEventListener('click', reset);
+        }
+
+        // Rules Manager
+        function handleEventRulesManager() {
+            document.getElementById('rules-uploadDownloadContainer').appendChild(
+                document.getElementById('upload-download-buttons').content.cloneNode(true)
+            );
+            $('#rules-uploadDownloadContainer .uploadBtn').id = 'rules-uploadBtn';
+            $('#rules-uploadDownloadContainer .downloadBtn').id = 'rules-downloadBtn';
+            const qualySelect = $('select[name="rules-qualifyingSelect"]');
+            setSelectOptionsByObj(qualySelect, qualyTypes);
+            const rulesJsonEditor = $id('rules-jsonTextEditor');
+            function updateJsonEditor() {
+                const data = {
+                    qualifyStandingType: qualyTypesValues[qualySelect.value] || 1,
+                    pitWindowLengthSec: parseInt($inputValueOrPlaceholder('input[name="rules-pitWindowLength"]')) || -1,
+                    driverStintTimeSec: parseInt($inputValueOrPlaceholder('input[name="rules-driverStintTime"]')) || -1,
+                    mandatoryPitstopCount: parseInt($inputValueOrPlaceholder('input[name="rules-mandatoryPitStops"]')) || 0,
+                    maxTotalDrivingTime: parseInt($inputValueOrPlaceholder('input[name="rules-maxTotalDrivingTime"]')) || -1,
+                    maxDriversCount: parseInt($inputValueOrPlaceholder('input[name="rules-maxDriverCount"]')) || 1,
+                    isRefuellingAllowedInRace: $('input[name="rules-refuellingAllowed"]').checked,
+                    isRefuellingTimeFixed: $('input[name="rules-refuellingTimeFixed"]').checked,
+                    isMandatoryPitstopRefuellingRequired: $('input[name="rules-refuellingRequired"]').checked,
+                    isMandatoryPitstopTyreChangeRequired: $('input[name="rules-tyreChangeRequired"]').checked,
+                    isMandatoryPitstopSwapDriverRequired: $('input[name="rules-driverSwapRequired"]').checked,
+                    tyreSetCount: parseInt($('input[name="rules-tyresSetCount"]').value) || 10,
+                };
+                forms[Storages.rules] = data;
+                if (keepChanges) writeLocalStorage(Storages.rules, data);
+                rulesJsonEditor.value = JSON.stringify(data, null, 2);
+            }
+            const inputs = [
+                'select[name="rules-qualifyingSelect"]',
+                'input[name="rules-pitWindowLength"]',
+                'input[name="rules-driverStintTime"]',
+                'input[name="rules-mandatoryPitStops"]',
+                'input[name="rules-maxTotalDrivingTime"]',
+                'input[name="rules-maxDriverCount"]',
+                'input[name="rules-refuellingAllowed"]',
+                'input[name="rules-refuellingTimeFixed"]',
+                'input[name="rules-refuellingRequired"]',
+                'input[name="rules-tyreChangeRequired"]',
+                'input[name="rules-driverSwapRequired"]',
+                'input[name="rules-tyresSetCount"]'
+            ];
+            inputFormChanges(inputs, updateJsonEditor);
+            updateJsonEditor();
+            $id('rules-textEditorContainer').addEventListener('click', () => {
+                rulesJsonEditor.select();
+                document.execCommand('copy');
+                showSnackbar('JSON copied to clipboard.');
+            });
+            $id('rules-downloadBtn').addEventListener('click', () => {
+                downloadJSON(`event_rules.json`, rulesJsonEditor.value);
+            });
+            $id('rules-uploadBtn').addEventListener('click', () => {
+                uploadJSON((data) => { reset(); updateForm(data); updateJsonEditor(); });
+            });
+            function updateForm(jsonData) {
+                if (jsonData.qualifyStandingType) {
+                    const qualyKey = Object.keys(qualyTypesValues).find(key => qualyTypesValues[key] === jsonData.qualifyStandingType);
+                    if (qualyKey) qualySelect.value = qualyKey;
+                }
+                [
+                    ['input[name="rules-pitWindowLength"]', 'pitWindowLengthSec'],
+                    ['input[name="rules-driverStintTime"]', 'driverStintTimeSec'],
+                    ['input[name="rules-mandatoryPitStops"]', 'mandatoryPitstopCount'],
+                    ['input[name="rules-maxTotalDrivingTime"]', 'maxTotalDrivingTime'],
+                    ['input[name="rules-maxDriverCount"]', 'maxDriversCount'],
+                    ['input[name="rules-driverSwapRequired"]', 'isMandatoryPitstopSwapDriverRequired'],
+                    ['input[name="rules-refuellingAllowed"]', 'isRefuellingAllowedInRace'],
+                    ['input[name="rules-refuellingTimeFixed"]', 'isRefuellingTimeFixed'],
+                    ['input[name="rules-refuellingRequired"]', 'isMandatoryPitstopRefuellingRequired'],
+                    ['input[name="rules-tyreChangeRequired"]', 'isMandatoryPitstopTyreChangeRequired'],
+                    ['input[name="rules-tyresSetCount"]', 'tyreSetCount']
+                ].forEach(([selector, key]) => {
+                    if (jsonData[key] !== undefined) {
+                        const el = $(selector);
+                        if (el.type === 'checkbox') el.checked = jsonData[key];
+                        else el.value = jsonData[key];
+                    }
+                });
+            }
+            const readResult = readLocalStorage(Storages.rules, {});
+            if (readResult && Object.keys(readResult).length > 0) {
+                updateForm(readResult);
+                updateJsonEditor();
+            }
+            function reset() {
+                resetInputs(inputs);
+                qualySelect.value = Object.keys(qualyTypes)[0];
+                updateJsonEditor();
+            }
+            $('#resetEventRules').addEventListener('click', reset);
+        }
+
+        // Settings Manager
+        function handleSettingsManager() {
+            const identifier = 'settings';
+            setupUploadDownloadButtons(identifier, uploadFile, downloadFile);
+            setSelectOptionsByObj($('select[name="settings-carGroup"]'), serverCarGroups, 'FreeForAll');
+            setSelectOptionsByObj($('select[name="settings-formationLapType"]'), formationLapTypes, '3');
+            function downloadFile() {
+                downloadJSON('settings.json', JSON.stringify(getFormValues(), null, 2));
+            }
+            function uploadFile() {
+                uploadJSON((data) => { reset(); updateForm(data); updateJsonEditor(); });
+            }
+            function updateForm(json) {
+                [
+                    ['input[name="settings-serverName"]', 'serverName'],
+                    ['input[name="settings-adminPassword"]', 'adminPassword'],
+                    ['select[name="settings-carGroup"]', 'carGroup'],
+                    ['input[name="settings-trackMedalsRequirement"]', 'trackMedalsRequirement'],
+                    ['input[name="settings-safetyRatingRequirement"]', 'safetyRatingRequirement'],
+                    ['input[name="settings-racecraftRatingRequirement"]', 'racecraftRatingRequirement'],
+                    ['input[name="settings-password"]', 'password'],
+                    ['input[name="settings-spectatorPassword"]', 'spectatorPassword'],
+                    ['input[name="settings-maxCarSlots"]', 'maxCarSlots'],
+                    ['input[name="settings-dumpLeaderboards"]', 'dumpLeaderboards'],
+                    ['input[name="settings-isRaceLocked"]', 'isRaceLocked'],
+                    ['input[name="settings-randomizeTrackWhenEmpty"]', 'randomizeTrackWhenEmpty'],
+                    ['input[name="settings-centralEntryListPath"]', 'centralEntryListPath'],
+                    ['input[name="settings-allowAutoDQ"]', 'allowAutoDQ'],
+                    ['input[name="settings-shortFormationLap"]', 'shortFormationLap'],
+                    ['input[name="settings-dumpEntryList"]', 'dumpEntryList'],
+                    ['select[name="settings-formationLapType"]', 'formationLapType'],
+                ].forEach(([selector, key]) => {
+                    if (json[key] !== undefined) {
+                        const el = $(selector);
+                        if (el.type === 'checkbox') el.checked = intToBool(json[key]);
+                        else el.value = json[key];
+                    }
+                });
+            }
+            const fields = [
+                'input[name="settings-serverName"]',
+                'input[name="settings-adminPassword"]',
+                'select[name="settings-carGroup"]',
+                'input[name="settings-trackMedalsRequirement"]',
+                'input[name="settings-safetyRatingRequirement"]',
+                'input[name="settings-racecraftRatingRequirement"]',
+                'input[name="settings-password"]',
+                'input[name="settings-spectatorPassword"]',
+                'input[name="settings-maxCarSlots"]',
+                'input[name="settings-dumpLeaderboards"]',
+                'input[name="settings-isRaceLocked"]',
+                'input[name="settings-randomizeTrackWhenEmpty"]',
+                'input[name="settings-centralEntryListPath"]',
+                'input[name="settings-allowAutoDQ"]',
+                'input[name="settings-shortFormationLap"]',
+                'input[name="settings-dumpEntryList"]',
+                'select[name="settings-formationLapType"]'
+            ];
+            inputFormChanges(fields, updateJsonEditor);
+            updateJsonEditor();
+            function updateJsonEditor() {
+                const data = getFormValues();
+                forms[Storages.settings] = data;
+                if (keepChanges) writeLocalStorage(Storages.settings, data);
+                $('#settings-jsonTextEditor').value = JSON.stringify(data, null, 4);
+            }
+            function getFormValues() {
+                return {
+                    serverName: $('input[name="settings-serverName"]').value,
+                    adminPassword: $('input[name="settings-adminPassword"]').value,
+                    carGroup: $('select[name="settings-carGroup"]').value,
+                    trackMedalsRequirement: parseInt($inputValueOrPlaceholder('input[name="settings-trackMedalsRequirement"]')),
+                    safetyRatingRequirement: parseInt($inputValueOrPlaceholder('input[name="settings-safetyRatingRequirement"]')),
+                    racecraftRatingRequirement: parseInt($inputValueOrPlaceholder('input[name="settings-racecraftRatingRequirement"]')),
+                    password: $('input[name="settings-password"]').value,
+                    spectatorPassword: $('input[name="settings-spectatorPassword"]').value,
+                    maxCarSlots: parseInt($inputValueOrPlaceholder('input[name="settings-maxCarSlots"]')),
+                    dumpLeaderboards: boolToInt($('input[name="settings-dumpLeaderboards"]').checked),
+                    isRaceLocked: boolToInt($('input[name="settings-isRaceLocked"]').checked),
+                    randomizeTrackWhenEmpty: boolToInt($('input[name="settings-randomizeTrackWhenEmpty"]').checked),
+                    centralEntryListPath: $('input[name="settings-centralEntryListPath"]').value,
+                    allowAutoDQ: boolToInt($('input[name="settings-allowAutoDQ"]').checked),
+                    shortFormationLap: boolToInt($('input[name="settings-shortFormationLap"]').checked),
+                    dumpEntryList: boolToInt($('input[name="settings-dumpEntryList"]').checked),
+                    formationLapType: $('select[name="settings-formationLapType"]').value,
+                };
+            }
+            $('#settings-jsonTextEditor').addEventListener('click', () => {
+                $('#settings-jsonTextEditor').select();
+                document.execCommand('copy');
+                showSnackbar('JSON copied to clipboard.');
+            });
+            const readResult = readLocalStorage(Storages.settings, {});
+            if (readResult && Object.keys(readResult).length > 0) {
+                updateForm(readResult);
+                updateJsonEditor();
+            }
+            function reset() {
+                resetInputs(fields);
+                $('select[name="settings-formationLapType"]').value = '3';
+                $('select[name="settings-carGroup"]').value = 'FreeForAll';
+                updateJsonEditor();
+            }
+            $('#resetSettings').addEventListener('click', reset);
+        }
+
+        handleBopManager();
+        handleEventManager();
+        handleEventRulesManager();
+        handleDriverManager();
+        handleSettingsManager();
+        handleEntryListManager();
+    }
+
+    function init() {
+        handleMenu();
+        handleNavigation();
+        handleViews();
+        handleKeepChanges();
+    }
+</script>
+<script>
+    init();
+</script>
+
+</html>
