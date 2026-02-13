@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - 'static/**'
+      - "src/**"
   workflow_dispatch:
 
 jobs:
@@ -14,14 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy HTML to server
-        run: |
-          mkdir -p dist
-          cp static/*.html dist/
-          cp src/acc_server_tool.html dist/
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: static-content
-          path: dist/
+          path: src/
