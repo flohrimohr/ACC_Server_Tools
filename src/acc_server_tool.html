@@ -1643,6 +1643,16 @@
                 $('#driver-tableEditorContainer').style.display = 'none';
                 $('#driver-textEditorContainer').style.display = 'block';
             });
+
+            $('#driver-jsonTextEditor').addEventListener('driverChanged', function () {
+                try {
+                    const data = JSON.parse(this.value);
+                    populateTable(data);
+                    updateTextEditor(data);
+                } catch (e) {
+                }
+            });
+
             function uploadFile() {
                 uploadJSON((data) => { reset(); populateTable(data); updateTextEditor(data); });
             }
@@ -1748,8 +1758,6 @@
         // Entry List Manager
         function handleEntryListManager() {
             const identifier = 'entry';
-            const driverJson = $('#driver-jsonTextEditor').value;
-            let driverList = driverJson ? JSON.parse(driverJson).drivers : [];
             const jsonTextEditor = $('#entry-jsonTextEditor');
             const inputs = ['input[name="entry-raceNumber"]',
                 'input[name="entry-defaultGridPosition"]',
@@ -1777,6 +1785,42 @@
                 forms[Storages.entryList] = data;
 
                 if (keepChanges) writeLocalStorage(Storages.entryList, data);
+
+                if (data.entries) {
+                    let driverData = readLocalStorage(Storages.driver, { drivers: [] });
+                    let drivers = driverData.drivers || [];
+                    let newDrivers = [];
+                    data.entries.forEach(entry => {
+                        if (entry.drivers && Array.isArray(entry.drivers)) {
+                            entry.drivers.forEach(driverArr => {
+                                if (Array.isArray(driverArr)) {
+                                    driverArr.forEach(driver => {
+                                        if (!drivers.some(d => d.shortName === driver.shortName)) {
+                                            newDrivers.push(driver);
+                                            drivers.push(driver);
+                                        }
+                                    });
+                                } else if (driverArr.shortName && !drivers.some(d => d.shortName === driverArr.shortName)) {
+                                    newDrivers.push(driverArr);
+                                    drivers.push(driverArr);
+                                }
+                            });
+                        }
+                    });
+                    if (newDrivers.length > 0) {
+                        writeLocalStorage(Storages.driver, { drivers });
+                        showSnackbar(`${newDrivers.length} new driver(s) added to Driver Manager.`);
+                        const driverJson = $('#driver-jsonTextEditor').value;
+                        try {
+                            const driverData = JSON.parse(driverJson);
+                            driverData.drivers = drivers;
+                            $('#driver-jsonTextEditor').value = JSON.stringify(driverData, null, 4);
+                            const customEvent = new CustomEvent('driverChanged');
+                            $('#driver-jsonTextEditor').dispatchEvent(customEvent);
+                        } catch (e) {
+                        }
+                    }
+                }
             }
 
             function uploadFile() {
@@ -1828,6 +1872,7 @@
                 setUpCarSelect(identifier);
                 setUpCarFilter(identifier, filterCarSelect);
                 document.getElementById('entry-driverTableBody').innerHTML = '';
+                updateEntryTableFromJson();
             }
 
             function reset() {
@@ -1901,7 +1946,13 @@
             }
 
             function removeEntry(index) {
-                
+                let entryListData = readLocalStorage(Storages.entryList, { entries: [], forceEntryList: 1 });
+                if (!entryListData.entries || !Array.isArray(entryListData.entries)) return;
+                entryListData.entries.splice(index, 1);
+                entryListData.forceEntryList = 1;
+                document.getElementById('entry-jsonTextEditor').value = JSON.stringify(entryListData, null, 2);
+                updateEntryTableFromJson();
+                if (keepChanges) writeLocalStorage(Storages.entryList, entryListData);
             }
 
             // Listen for JSON changes
@@ -1913,7 +1964,6 @@
             updateEntryTableFromJson();
 
             document.getElementById('entry-addDriverBtn').onclick = function () {
-                console.log('clicked')
                 const entryDriverTableBody = document.getElementById('entry-driverTableBody');
 
                 // Create a modal for driver selection
@@ -1933,12 +1983,21 @@
                 let title = document.createElement('h3');
                 title.textContent = 'Select Driver(s)';
                 modalContent.appendChild(title);
+                const driverJson = $('#driver-jsonTextEditor').value;
+                let driverList = driverJson ? JSON.parse(driverJson).drivers : [];
 
                 // List drivers from driver-tableBody
                 if (driverList.length === 0) {
                     let noDrivers = document.createElement('div');
                     noDrivers.textContent = 'No drivers available. Please add drivers first.';
                     modalContent.appendChild(noDrivers);
+                    document.body.appendChild(modal);
+                    modal.appendChild(modalContent);
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            document.body.removeChild(modal);
+                        }
+                    });
                 } else {
                     // Short modal for selecting drivers
                     const form = document.createElement('form');
