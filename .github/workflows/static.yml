@@ -1,0 +1,28 @@
+name: Deploy Static Content Page
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'static/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy HTML to server
+        run: |
+          mkdir -p dist
+          cp static/*.html dist/
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: static-content
+                path: dist/
+              
+              - name: Copy ACC Server Tool
+              run: cp src/acc_server_tool.html dist/
