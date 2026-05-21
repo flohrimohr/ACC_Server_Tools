@@ -38,6 +38,15 @@ This ensures your configuration data is preserved between sessions.
 
 ---
 
+## Demo
+
+You can try the tool directly here:
+
+[![Open ACC Server Tools](https://img.shields.io/badge/Launch%20Tool-ACC%20Server%20Tools-blue)](https://flohrimohr.github.io/ACC_Server_Tools/)
+
+
+---
+
 ## Feature Set
 
 The following management tools are included:
